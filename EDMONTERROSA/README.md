@@ -3,16 +3,14 @@
 
 ## 1. Referentes
 
-**Peergrade**
-Permite evaluación entre pares mediante rúbricas estructuradas y reportes consolidados.
+**Brightspace**
+Plataforma institucional donde ya se crean los grupos, por lo tanto la aplicación debe integrarse con esta estructura.
 
 **Google Classroom**
 Referencia en gestión de cursos y claridad en experiencia de usuario.
 
-**Brightspace**
-Plataforma institucional donde ya se crean los grupos, por lo tanto la aplicación debe integrarse con esta estructura.
-
----
+**Peergrade**
+Permite evaluación entre pares mediante rúbricas estructuradas y reportes consolidados.
 
 ## 2. Propuesta de solución
 
@@ -22,8 +20,6 @@ Se propone una única aplicación móvil en Flutter con manejo de roles (docente
 * Permite reutilización de módulos.
 * Facilita escalabilidad.
 * Se ajusta a Clean Architecture.
-
----
 
 ## 3. Arquitectura
 
@@ -41,8 +37,6 @@ Se propone una única aplicación móvil en Flutter con manejo de roles (docente
 * Repositorios.
 * Autenticación y base de datos con Roble.
 * Integración con Brightspace para importar grupos.
-
----
 
 ## 4. Flujo funcional
 
@@ -65,8 +59,6 @@ Prototipo en Figma:
    * Promedio general
 7. Los resultados se muestran según la configuración definida.
 
----
-
 ## 5. Capturas del prototipo
 
 ### Login
@@ -75,29 +67,27 @@ Prototipo en Figma:
 
 ### Docente – Cursos
 
-![Docente Cursos](./imagenes/docente cursos.png)
+![Docente Cursos](./imagenes/docente_cursos.png)
 
 ### Docente – Crear evaluación
 
-![Docente Crear Evaluación](./imagenes/docente crear evaluacion.png)
+![Docente Crear Evaluación](./imagenes/docente_crear_evaluacion.png)
 
 ### Docente – Evaluaciones
 
-![Docente Evaluaciones](./imagenes/docente evaluaciones.png)
+![Docente Evaluaciones](./imagenes/docente_evaluaciones.png)
 
 ### Docente – Resultados
 
-![Docente Resultados](./imagenes/docente resultados.png)
+![Docente Resultados](./imagenes/docente_resultados.png)
 
 ### Estudiante – Mis cursos
 
-![Estudiante Mis Cursos](./imagenes/estudiante mis cursos.png)
+![Estudiante Mis Cursos](./imagenes/estudiante_mis_cursos.png)
 
 ### Estudiante – Evaluaciones
 
-![Estudiante Evaluaciones](./imagenes/estudiante evaluaciones.png)
-
----
+![Estudiante Evaluaciones](./imagenes/estudiante_evaluaciones.png)
 
 ## 6. Justificación académica
 
