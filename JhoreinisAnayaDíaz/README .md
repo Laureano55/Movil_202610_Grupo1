@@ -1,5 +1,5 @@
-# Propuesta individual – Jhoreinis Anaya Díaz
 # UniFlow – Plataforma de Organización Estudiantil Universitaria
+## Propuesta individual – Jhoreinis Anaya Díaz
 
 ## Problemática
 En el contexto universitario, los estudiantes participan en:
@@ -20,30 +20,26 @@ Sin embargo, se podría presentar problemas frecuentes como:
 ## Referentes
 
 1. Trello: Herramienta de gestión de tareas basada en tableros Kanban.
-   
-Aportes:
 
--	Visualización clara del flujo de trabajo.
--	Organización por columnas (pendiente, en proceso, finalizado).
--	Asignación de responsables.
+   Aportes:
+    - Visualización clara del flujo de trabajo.
+    - Organización por columnas (pendiente, en proceso, finalizado).
+    - Asignación de responsables.
 
-Limitación en contexto universitario:
-
--	No está diseñada específicamente para entornos académicos.
--  No integra seguimiento docente formal.
+   Limitación en contexto universitario:
+    - No está diseñada específicamente para entornos académicos.
+    - No integra seguimiento docente formal.
 
 2. Notion: Plataforma de organización y documentación colaborativa.
-   
-Aportes:
 
--	Centralización de información.
--	Espacios colaborativos personalizables.
--	Gestión flexible de proyectos.
+   Aportes:
+    - Centralización de información.
+    - Espacios colaborativos personalizables.
+    - Gestión flexible de proyectos.
 
-Limitación:
-
--	Curva de aprendizaje alta.
--	No ofrece métricas automáticas de participación académica.
+   Limitación:
+    - Curva de aprendizaje alta.
+    - No ofrece métricas automáticas de participación académica.
  
 ## Propuesta de Solución
 
@@ -67,7 +63,7 @@ Capa de Presentación
 -	Notificaciones push.
 
 Capa de Dominio
-Entidades principales:
+Entidades principales
 -	Usuario
 -	Proyecto
 -	Grupo
@@ -76,7 +72,7 @@ Entidades principales:
 -	Comentario
 -	Métrica de participación
 
-Casos de uso:
+Casos de uso
 -	Crear proyecto
 -	Crear grupo
 -	Asignar tareas
