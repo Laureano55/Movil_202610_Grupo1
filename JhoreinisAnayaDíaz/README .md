@@ -1,7 +1,7 @@
-#Propuesta individual – Jhoreinis Anaya Díaz
-#UniFlow – Plataforma de Organización Estudiantil Universitaria
+# Propuesta individual – Jhoreinis Anaya Díaz
+# UniFlow – Plataforma de Organización Estudiantil Universitaria
 
-##Problemática
+## Problemática
 En el contexto universitario, los estudiantes participan en:
 •	Grupos de estudio
 •	Proyectos académicos
@@ -15,7 +15,7 @@ Sin embargo, se podría presentar problemas frecuentes como:
 •	Comunicación dispersa (WhatsApp, correo, Classroom, etc.).
 •	Dificultad para que docentes hagan seguimiento al trabajo en equipo.
 
-##Referentes
+## Referentes
 1. Trello
 Herramienta de gestión de tareas basada en tableros Kanban.
 Aportes:
@@ -34,8 +34,8 @@ Aportes:
 Limitación:
 •	Curva de aprendizaje alta.
 •	No ofrece métricas automáticas de participación académica.
-
-##Propuesta de Solución
+ 
+## Propuesta de Solución
 Se propone UniFlow, una aplicación móvil diseñada específicamente para la organización de proyectos estudiantiles universitarios, con seguimiento docente integrado.
 Configuración propuesta
 Se propone:
@@ -46,7 +46,7 @@ Justificación
 •	Permite centralizar base de datos y autenticación.
 •	Facilita mantenimiento y escalabilidad.
 
-##Arquitectura Propuesta
+## Arquitectura Propuesta
 Se implementará bajo arquitectura en tres capas (Clean Architecture).
 Capa de Presentación
 •	Aplicación móvil en Flutter.
@@ -121,9 +121,9 @@ Para el estudiante:
 •	Comparación con promedio del grupo.
 •	Historial de desempeño.
 
-##Prototipo
+## Prototipo
 
-##Justificación de la Propuesta
+## Justificación de la Propuesta
 La propuesta se fundamenta en:
 •	La organización visual de Trello.
 •	La centralización documental de Notion.
