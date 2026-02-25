@@ -32,7 +32,7 @@ Limitación en contexto universitario:
 -	No está diseñada específicamente para entornos académicos.
 -  No integra seguimiento docente formal.
 
-3. Notion: Plataforma de organización y documentación colaborativa.
+2. Notion: Plataforma de organización y documentación colaborativa.
    
 Aportes:
 
@@ -92,70 +92,68 @@ Capa de Datos
 -	Sistema de almacenamiento en la nube
 
 Flujo Funcional Detallado
-
 1. Inicio de sesión: El usuario accede con credenciales institucionales.
+
+   - El sistema identifica el rol:
+     -	Docente
+     -	Estudiante
+
+2. Flujo del Docente: Crea un proyecto académico.
    
-El sistema identifica el rol:
--	Docente
--	Estudiante
+   - Define:
+      -	Objetivos
+      -	Fecha de entrega
+      -	Criterios de evaluación
 
-2. Flujo del Docente
-   
-1.	Crea un proyecto académico.
-2.	Define:
--	Objetivos
--	Fecha de entrega
--	Criterios de evaluación
+   - Crea o importa grupos.
 
-3.	Crea o importa grupos.
+   - Habilito seguimiento.
 
-4.	Habilito seguimiento.
-
-5.	Monitorea avance en tiempo real:
--	Tareas completadas
--	Participación individual
--	Entregas parciales
+   - Monitorea avance en tiempo real:
+      - Tareas completadas
+      -	Participación individual
+      -	Entregas parciales
   
-6.	Visualiza métricas finales.
+   - Visualiza métricas finales.
    
 3. Flujo del Estudiante
    
-1.	Accede a proyectos activos.
+   - Accede a proyectos activos.
    
-2.	Visualiza tablero tipo Kanban:
--	Pendiente
--	En progreso
--	Finalizado
+   - Visualiza tablero tipo Kanban:
+      - Pendiente
+      - En progreso
+      - Finalizado
   
-3.	Asigna o recibe tareas.
+   - Asigna o recibe tareas.
 
-4.	Actualiza estado.
+   - Actualiza estado.
 
-5.	Adjunta evidencias.
+   - Adjunta evidencias.
 
-6.	Comenta avances.
+	- Comenta avances.
 
-7.	Consultas métricas personales.
+   - Consultas métricas personales.
    
 4. Métricas Automáticas
    
-El sistema calcula:
--	Número de tareas completadas por usuario.
--	Tiempo promedio de cumplimiento.
--	Nivel de participación.
--	Interacciones en el proyecto.
--	Cumplimiento de fechas.
+   - El sistema calcula:
+      - Número de tareas completadas por usuario.
+	   - Tiempo promedio de cumplimiento.
+	   - Nivel de participación.
+	   - Interacciones en el proyecto.
+	   - Cumplimiento de fechas.
 
-6. Visualización de Resultados
-   
-Para el docente:
--	Ranking de participación.
--	Alertas de baja actividad.
--	Exportación de reportes.
-Para el estudiante:
--	Indicador de contribución personal.
--	Comparación con promedio del grupo.
--	Historial de desempeño.
+5. Visualización de Resultados
+   - Para el docente:
+      - Ranking de participación.
+	   - Alertas de baja actividad.
+	   - Exportación de reportes.
+       
+   - Para el estudiante:
+      - Indicador de contribución personal.
+      - Comparación con promedio del grupo.
+      - Historial de desempeño.
 
 ## Prototipo
 
