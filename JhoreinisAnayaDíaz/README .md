@@ -3,6 +3,7 @@
 
 ## Problemática
 En el contexto universitario, los estudiantes participan en:
+
 •	Grupos de estudio
 •	Proyectos académicos
 •	Semilleros de investigación
