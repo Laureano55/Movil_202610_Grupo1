@@ -22,46 +22,53 @@ Sin embargo, se podría presentar problemas frecuentes como:
 1. Trello: Herramienta de gestión de tareas basada en tableros Kanban.
    
 Aportes:
-•	Visualización clara del flujo de trabajo.
-•	Organización por columnas (pendiente, en proceso, finalizado).
-•	Asignación de responsables.
+
+-	Visualización clara del flujo de trabajo.
+-	Organización por columnas (pendiente, en proceso, finalizado).
+-	Asignación de responsables.
 
 Limitación en contexto universitario:
-•	No está diseñada específicamente para entornos académicos.
-•	No integra seguimiento docente formal.
+
+-	No está diseñada específicamente para entornos académicos.
+-  No integra seguimiento docente formal.
 
 3. Notion: Plataforma de organización y documentación colaborativa.
    
 Aportes:
-•	Centralización de información.
-•	Espacios colaborativos personalizables.
-•	Gestión flexible de proyectos.
+
+-	Centralización de información.
+-	Espacios colaborativos personalizables.
+-	Gestión flexible de proyectos.
 
 Limitación:
-•	Curva de aprendizaje alta.
-•	No ofrece métricas automáticas de participación académica.
+
+-	Curva de aprendizaje alta.
+-	No ofrece métricas automáticas de participación académica.
  
 ## Propuesta de Solución
 
 Se propone UniFlow, una aplicación móvil diseñada específicamente para la organización de proyectos estudiantiles universitarios, con seguimiento docente integrado.
 
 Se propone:
-•	Una aplicación móvil única con manejo de roles (estudiante y docente).
+
+-	Una aplicación móvil única con manejo de roles (estudiante y docente).
 Justificación
-•	Los estudiantes usan principalmente dispositivos móviles.
-•	Los docentes prefieren pantallas grandes para visualizar reportes.
-•	Permite centralizar base de datos y autenticación.
-•	Facilita mantenimiento y escalabilidad.
+-	Los estudiantes usan principalmente dispositivos móviles.
+-	Los docentes prefieren pantallas grandes para visualizar reportes.
+-	Permite centralizar base de datos y autenticación.
+-	Facilita mantenimiento y escalabilidad.
 
 ## Arquitectura Propuesta
 Se implementará bajo arquitectura en tres capas (Clean Architecture).
 
 Capa de Presentación
+
 •	Aplicación móvil en Flutter.
 •	Interfaces diferenciadas por rol.
 •	Notificaciones push.
 
 Capa de Dominio
+
 Entidades principales:
 •	Usuario
 •	Proyecto
