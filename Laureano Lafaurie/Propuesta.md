@@ -88,11 +88,14 @@ Esta estructura garantiza una separación clara de responsabilidades, facilita e
 **Profesor:**
 El profesor crea un curso dentro de la aplicación e invita a los estudiantes mediante un código privado o mecanismo de verificación. Puede administrar múltiples cursos desde su panel principal.
 
+![Pantalla Creación curso](images/creacion_curso.png)
+
 **Estudiante:**
 El estudiante ingresa el código de invitación o acepta la invitación recibida para unirse al curso. Una vez dentro, el curso aparece en su lista de “Mis cursos”.
 
-**Captura:**
 ![Pantalla unión curso](images/union_curso.png)
+
+
 
 ### 4.2 Importación de grupos desde Brightspace
 
@@ -100,8 +103,7 @@ Los grupos no se crean en la app. El profesor importa las categorías de grupo p
 
 El sistema permite actualizar la información si hay cambios en las categorías o integrantes.
 
-**Captura:**
-![Pantalla grupos](images/grupos.png)
+![Pantalla grupos](images/importar_grupos.png)
 
 ### 4.3 Activación de evaluación
 El profesor selecciona una categoría de grupo y crea una evaluación definiendo:
@@ -114,8 +116,9 @@ El profesor selecciona una categoría de grupo y crea una evaluación definiendo
 
 Durante el tiempo activo, cada estudiante evalúa a sus compañeros, y si el profesor lo permite, también a si mismos, asignando puntajes según los criterios establecidos.
 
-**Captura:**
-![Pantalla evaluación](images/evaluacion.png)
+![Pantalla evaluación](images/evaluacion_1.png)
+![Pantalla evaluación](images/evaluacion_2.png)
+![Pantalla evaluación](images/evaluacion_3.png)
 
 ### 4.4 Visualización de resultados
 
@@ -133,8 +136,15 @@ El profesor puede consultar estadísticas detalladas:
 
 Los estudiantes pueden visualizar sus resultados únicamente si la evaluación fue configurada como pública.
 
-📷 Captura:
-![Resultados](images/resultados.png)
+#### Profesor
+
+![Resultados](images/resultados_p_1.png)
+![Resultados](images/resultados_p_2.png)
+![Resultados](images/resultados_p_3.png)
+
+#### Estudiante
+
+![Resultados](images/resultados_e_1.png)
 
 ## 5. Justificación de la propuesta
 La propuesta se fundamenta en el análisis de herramientas existentes de evaluación entre pares como Peergrade, CATME y el entorno institucional Brightspace. Estas plataformas demuestran que la evaluación colaborativa es una práctica consolidada en educación superior y que el uso de rúbricas estructuradas mejora la objetividad del proceso.
