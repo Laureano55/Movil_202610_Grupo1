@@ -87,7 +87,7 @@ Capa de Datos
 -	Autenticación institucional (OAuth2)
 -	Sistema de almacenamiento en la nube
 
-Flujo Funcional Detallado
+## Flujo Funcional Detallado
 1. Inicio de sesión: El usuario accede con credenciales institucionales.
 
    - El sistema identifica el rol:
