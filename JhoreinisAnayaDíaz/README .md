@@ -62,87 +62,100 @@ Justificación
 Se implementará bajo arquitectura en tres capas (Clean Architecture).
 
 Capa de Presentación
-
-•	Aplicación móvil en Flutter.
-•	Interfaces diferenciadas por rol.
-•	Notificaciones push.
+-	Aplicación móvil en Flutter.
+-	Interfaces diferenciadas por rol.
+-	Notificaciones push.
 
 Capa de Dominio
-
 Entidades principales:
-•	Usuario
-•	Proyecto
-•	Grupo
-•	Tarea
-•	Entrega
-•	Comentario
-•	Métrica de participación
+-	Usuario
+-	Proyecto
+-	Grupo
+-	Tarea
+-	Entrega
+-	Comentario
+-	Métrica de participación
 
 Casos de uso:
-•	Crear proyecto
-•	Crear grupo
-•	Asignar tareas
-•	Actualizar estado
-•	Subir entregables
-•	Generar métricas
-•	Visualizar reportes
+-	Crear proyecto
+-	Crear grupo
+-	Asignar tareas
+-	Actualizar estado
+-	Subir entregables
+-	Generar métricas
+-	Visualizar reportes
 
 Capa de Datos
-•	API REST
-•	Base de datos PostgreSQL
-•	Autenticación institucional (OAuth2)
-•	Sistema de almacenamiento en la nube
+-	API REST
+-	Base de datos PostgreSQL
+-	Autenticación institucional (OAuth2)
+-	Sistema de almacenamiento en la nube
 
 Flujo Funcional Detallado
+
 1. Inicio de sesión: El usuario accede con credenciales institucionales.
    
 El sistema identifica el rol:
-•	Docente
-•	Estudiante
+-	Docente
+-	Estudiante
 
 2. Flujo del Docente
+   
 1.	Crea un proyecto académico.
 2.	Define:
-o	Objetivos
-o	Fecha de entrega
-o	Criterios de evaluación
+-	Objetivos
+-	Fecha de entrega
+-	Criterios de evaluación
+
 3.	Crea o importa grupos.
+
 4.	Habilito seguimiento.
+
 5.	Monitorea avance en tiempo real:
-o	Tareas completadas
-o	Participación individual
-o	Entregas parciales
+-	Tareas completadas
+-	Participación individual
+-	Entregas parciales
+  
 6.	Visualiza métricas finales.
    
 3. Flujo del Estudiante
+   
 1.	Accede a proyectos activos.
+   
 2.	Visualiza tablero tipo Kanban:
-o	Pendiente
-o	En progreso
-o	Finalizado
+-	Pendiente
+-	En progreso
+-	Finalizado
+  
 3.	Asigna o recibe tareas.
+
 4.	Actualiza estado.
+
 5.	Adjunta evidencias.
+
 6.	Comenta avances.
+
 7.	Consultas métricas personales.
    
 4. Métricas Automáticas
+   
 El sistema calcula:
-•	Número de tareas completadas por usuario.
-•	Tiempo promedio de cumplimiento.
-•	Nivel de participación.
-•	Interacciones en el proyecto.
-•	Cumplimiento de fechas.
+-	Número de tareas completadas por usuario.
+-	Tiempo promedio de cumplimiento.
+-	Nivel de participación.
+-	Interacciones en el proyecto.
+-	Cumplimiento de fechas.
 
-5. Visualización de Resultados
+6. Visualización de Resultados
+   
 Para el docente:
-•	Ranking de participación.
-•	Alertas de baja actividad.
-•	Exportación de reportes.
+-	Ranking de participación.
+-	Alertas de baja actividad.
+-	Exportación de reportes.
 Para el estudiante:
-•	Indicador de contribución personal.
-•	Comparación con promedio del grupo.
-•	Historial de desempeño.
+-	Indicador de contribución personal.
+-	Comparación con promedio del grupo.
+-	Historial de desempeño.
 
 ## Prototipo
 
@@ -150,14 +163,14 @@ Para el estudiante:
 
 La propuesta se fundamenta en:
 
-•	La organización visual de Trello.
-•	La centralización documental de Notion.
-•	La comunicación integrada de Microsoft Teams.
+-	La organización visual de Trello.
+-	La centralización documental de Notion.
+-	La comunicación integrada de Microsoft Teams.
 
 Sin embargo, UniFlow mejora estos referentes porque:
 
-•	Está diseñada específicamente para contexto universitario.
-•	Integra métricas automáticas de participación.
-•	Permite seguimiento docente en tiempo real.
-•	Reduce la dispersión de herramientas.
-•	Mejora la trazabilidad del trabajo col
+-	Está diseñada específicamente para contexto universitario.
+-	Integra métricas automáticas de participación.
+-	Permite seguimiento docente en tiempo real.
+-	Reduce la dispersión de herramientas.
+-	Mejora la trazabilidad del trabajo col
