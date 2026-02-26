@@ -153,6 +153,12 @@ Capa de Datos
 
 ## Prototipo
 
+Link: https://www.figma.com/make/cMtQ0q0AMVik3iQJhTRSqd/Academic-Project-Management-App?p=f&t=p5Iqqk2mf5hlpu0f-0&fullscreen=1
+
+<img width="400" height="484" alt="image" src="https://github.com/user-attachments/assets/abfeac6a-5af7-4cf5-9660-bb177ee52947" />
+<img width="400" height="484" alt="image" src="https://github.com/user-attachments/assets/abfeac6a-5af7-4cf5-9660-bb177ee52947" />
+
+
 ## Justificación de la Propuesta
 
 La propuesta se fundamenta en:
