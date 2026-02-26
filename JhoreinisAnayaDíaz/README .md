@@ -156,8 +156,12 @@ Capa de Datos
 Link: https://www.figma.com/make/cMtQ0q0AMVik3iQJhTRSqd/Academic-Project-Management-App?p=f&t=p5Iqqk2mf5hlpu0f-0&fullscreen=1
 
 <img width="400" height="484" alt="image" src="https://github.com/user-attachments/assets/abfeac6a-5af7-4cf5-9660-bb177ee52947" />
-<img width="400" height="484" alt="image" src="https://github.com/user-attachments/assets/abfeac6a-5af7-4cf5-9660-bb177ee52947" />
-
+<img width="450" height="546" alt="image" src="https://github.com/user-attachments/assets/9cff419d-d887-44ec-9a59-8a9d565b0a5d" />
+<img width="406" height="556" alt="image" src="https://github.com/user-attachments/assets/d06ec807-a402-47ca-88bb-814797b59f53" />
+<img width="438" height="537" alt="image" src="https://github.com/user-attachments/assets/f5238864-f0a9-4b26-983a-7fb20d5e4627" />
+<img width="434" height="540" alt="image" src="https://github.com/user-attachments/assets/adbfd491-6971-476f-b1de-5e63cff378d9" />
+<img width="462" height="549" alt="image" src="https://github.com/user-attachments/assets/32d98dfa-66d5-4ea2-b167-8f67a68bd579" />
+<img width="442" height="555" alt="image" src="https://github.com/user-attachments/assets/38a3005f-bb48-49a0-806d-52c566fc3133" />
 
 ## Justificación de la Propuesta
 
