@@ -143,6 +143,9 @@ class ProfessorHomePage extends GetView<ProfessorController> {
                           title: 'Importar grupos',
                           subtitle: 'Desde Brightspace o CSV',
                           color: Color(0xFF3ECFCF),
+                          onTap: () {
+                            Get.to(() => ImportGroupsPage());
+                          },
                         ),
                         _ActionCard(
                           icon: Icons.bar_chart_rounded,
