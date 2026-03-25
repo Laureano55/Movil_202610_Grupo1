@@ -1,3 +1,5 @@
+// ignore_for_file: duplicate_ignore, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../viewmodels/professor_controller.dart';
@@ -137,7 +139,7 @@ class ProfessorHomePage extends GetView<ProfessorController> {
                     child: Wrap(
                       spacing: 12,
                       runSpacing: 12,
-                      children: const [
+                      children: [
                         _ActionCard(
                           icon: Icons.group_add_rounded,
                           title: 'Importar grupos',
@@ -145,21 +147,21 @@ class ProfessorHomePage extends GetView<ProfessorController> {
                           color: Color(0xFF3ECFCF),
                           onTap: () {
                             Get.to(() => ImportGroupsPage());
-                          },
-                        ),
-                        _ActionCard(
-                          icon: Icons.bar_chart_rounded,
-                          title: 'Ver estadísticas',
-                          subtitle: 'Promedios por grupo',
-                          color: Color(0xFFFF6B6B),
-                        ),
-                        _ActionCard(
-                          icon: Icons.tune_rounded,
-                          title: 'Configurar rubrica',
-                          subtitle: 'Criterios de evaluación',
-                          color: Color(0xFFFFB347),
-                        ),
-                      ],
+                            },
+                            ),
+                            const _ActionCard(
+                              icon: Icons.bar_chart_rounded,
+                              title: 'Ver estadísticas',
+                              subtitle: 'Promedios por grupo',
+                              color: Color(0xFFFF6B6B),
+                              ),
+                              const _ActionCard(
+                                icon: Icons.tune_rounded,
+                                title: 'Configurar rubrica',
+                                subtitle: 'Criterios de evaluación',
+                                color: Color(0xFFFFB347),
+                                ),
+                                ],
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -270,7 +272,9 @@ class _StatChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
           color: highlight
+              // ignore: deprecated_member_use
               ? Colors.orange.withOpacity(0.9)
+              // ignore: deprecated_member_use
               : Colors.white.withOpacity(0.18),
           borderRadius: BorderRadius.circular(12),
         ),
