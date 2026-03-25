@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../viewmodels/auth_controller.dart';
+import 'forgot_password_page.dart';
+import 'signup_page.dart';
 
 class LoginPage extends GetView<AuthController> {
   const LoginPage({super.key});
@@ -127,36 +129,54 @@ class LoginPage extends GetView<AuthController> {
                         const SizedBox(height: 22),
                         SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: controller.goToHome,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4B3CF0),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                          child: Obx(
+                            () => ElevatedButton(
+                              onPressed: controller.isLoading.value
+                                  ? null
+                                  : () async {
+                                      try {
+                                        await controller.loginWithRoble();
+                                      } catch (e) {
+                                        Get.snackbar(
+                                          'Login',
+                                          e.toString().replaceFirst('Exception: ', ''),
+                                          snackPosition: SnackPosition.BOTTOM,
+                                        );
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4B3CF0),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                               ),
+                              child: controller.isLoading.value
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text('Iniciar sesion'),
                             ),
-                            child: const Text('Iniciar sesion'),
                           ),
                         ),
                         const SizedBox(height: 6),
                         TextButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  '🐢',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                duration: Duration(milliseconds: 2000),
-                                behavior: SnackBarBehavior.floating,
-                                width: 64,
-                              ),
-                            );
+                            Get.to(() => const ForgotPasswordPage());
                           },
                           child: const Text('Recuperar contrasena'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Get.to(() => const SignUpPage());
+                          },
+                          child: const Text('Crear cuenta'),
                         ),
                       ],
                     ),
