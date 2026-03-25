@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../viewmodels/student_controller.dart';
+import 'student_course_classmates_page.dart';
 
 /// Scroll con rebote suave — máximo 28px de overscroll.
 class _LightBouncePhysics extends BouncingScrollPhysics {
@@ -201,6 +202,13 @@ class StudentHomePage extends GetView<StudentController> {
                   ...controller.enrolledCourses.map((course) =>
                       _EnrolledCourseCard(
                         course: course,
+                        onTap: () => Get.to(
+                          () => StudentCourseClassmatesPage(
+                            courseId: course['id'] as String,
+                            courseTitle: course['title'] as String,
+                            courseCode: course['code'] as String,
+                          ),
+                        ),
                         onEvaluate: () => controller
                             .completeEvaluation(course['id'] as String),
                       )),
@@ -315,10 +323,12 @@ class _MiniStat extends StatelessWidget {
 
 class _EnrolledCourseCard extends StatelessWidget {
   final Map<String, dynamic> course;
+  final VoidCallback onTap;
   final VoidCallback onEvaluate;
 
   const _EnrolledCourseCard({
     required this.course,
+    required this.onTap,
     required this.onEvaluate,
   });
 
@@ -342,9 +352,14 @@ class _EnrolledCourseCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -436,7 +451,17 @@ class _EnrolledCourseCard extends StatelessWidget {
                 ),
               ),
             ],
+            const SizedBox(height: 8),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'Toca para ver tus compañeros',
+                style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+              ),
+            ),
           ],
+        ),
+          ),
         ),
       ),
     );

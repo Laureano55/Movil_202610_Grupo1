@@ -1,33 +1,21 @@
 import 'package:get/get.dart';
 
+import '../data/demo_course_store.dart';
+
 class ProfessorController extends GetxController {
+  final DemoCourseStore _store;
+
+  ProfessorController({DemoCourseStore? demoCourseStore})
+      : _store = demoCourseStore ?? DemoCourseStore();
+
   // ── Estado de cursos ──────────────────────────────────────────────────────
-  final courses = <Map<String, dynamic>>[
-    {
-      'id': '1',
-      'title': 'Desarrollo Móvil',
-      'code': 'COMP-4321',
-      'studentCount': 28,
-      'groupCount': 6,
-      'pendingEvals': 3,
-    },
-    {
-      'id': '2',
-      'title': 'Programación Web',
-      'code': 'COMP-3210',
-      'studentCount': 35,
-      'groupCount': 8,
-      'pendingEvals': 0,
-    },
-    {
-      'id': '3',
-      'title': 'Bases de Datos II',
-      'code': 'COMP-3110',
-      'studentCount': 22,
-      'groupCount': 5,
-      'pendingEvals': 1,
-    },
-  ].obs;
+  final courses = <Map<String, dynamic>>[].obs;
+
+  @override
+  Future<void> onInit() async {
+    super.onInit();
+    await loadCourses();
+  }
 
   // ── Estadísticas globales ─────────────────────────────────────────────────
   int get totalStudents =>
@@ -50,26 +38,21 @@ class ProfessorController extends GetxController {
   }
 
   // ── Acciones del profesor ─────────────────────────────────────────────────
-  void createCourse(String title, String code) {
-    courses.add({
-      'id': DateTime.now().millisecondsSinceEpoch.toString(),
-      'title': title,
-      'code': code,
-      'studentCount': 0,
-      'groupCount': 0,
-      'pendingEvals': 0,
-    });
-    Get.snackbar(
-      'Curso creado',
-      '"$title" ha sido creado exitosamente.',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+  Future<void> createCourse(String title, String code) async {
+    await _store.createCourse(title: title, code: code);
+
+    await loadCourses();
+    Get.snackbar('Curso creado', '"$title" ha sido creado exitosamente.',
+        snackPosition: SnackPosition.BOTTOM);
   }
 
-  void deleteCourse(String id) {
+  Future<void> deleteCourse(String id) async {
     final course = courses.firstWhereOrNull((c) => c['id'] == id);
     if (course == null) return;
-    courses.removeWhere((c) => c['id'] == id);
+
+    await _store.deleteCourse(id);
+
+    await loadCourses();
     Get.snackbar(
       'Curso eliminado',
       '"${course['title']}" ha sido eliminado.',
@@ -87,6 +70,11 @@ class ProfessorController extends GetxController {
       'Las evaluaciones del curso han sido publicadas.',
       snackPosition: SnackPosition.BOTTOM,
     );
+  }
+
+  Future<void> loadCourses() async {
+    final mapped = await _store.professorCourseSummaries();
+    courses.assignAll(mapped);
   }
 
   void logout() => Get.offAllNamed('/login');

@@ -1,29 +1,21 @@
 import 'package:get/get.dart';
 
+import '../data/demo_course_store.dart';
+
 class StudentController extends GetxController {
+  final DemoCourseStore _store;
+
+  StudentController({DemoCourseStore? demoCourseStore})
+      : _store = demoCourseStore ?? DemoCourseStore();
+
   // ── Cursos en los que está inscrito el estudiante ─────────────────────────
-  final enrolledCourses = <Map<String, dynamic>>[
-    {
-      'id': '1',
-      'title': 'Desarrollo Móvil',
-      'code': 'COMP-4321',
-      'professor': 'Dr. Carlos Gómez',
-      'myGroup': 'Grupo 3',
-      'activeEvals': 2,
-      'completedEvals': 5,
-      'totalEvals': 7,
-    },
-    {
-      'id': '2',
-      'title': 'Programación Web',
-      'code': 'COMP-3210',
-      'professor': 'Dra. Ana Torres',
-      'myGroup': 'Grupo 1',
-      'activeEvals': 0,
-      'completedEvals': 4,
-      'totalEvals': 4,
-    },
-  ].obs;
+  final enrolledCourses = <Map<String, dynamic>>[].obs;
+
+  @override
+  Future<void> onInit() async {
+    super.onInit();
+    await loadEnrolledCourses();
+  }
 
   // ── Estado de evaluaciones pendientes ─────────────────────────────────────
   int get totalActiveEvals =>
@@ -51,7 +43,7 @@ class StudentController extends GetxController {
   }
 
   // ── Unirse a curso con código ─────────────────────────────────────────────
-  void joinCourse(String code) {
+  Future<void> joinCourse(String code) async {
     final alreadyIn = enrolledCourses.any((c) => c['code'] == code);
     if (alreadyIn) {
       Get.snackbar(
@@ -61,17 +53,20 @@ class StudentController extends GetxController {
       );
       return;
     }
-    // Simulación: en producción se haría la llamada a la API
-    enrolledCourses.add({
-      'id': DateTime.now().millisecondsSinceEpoch.toString(),
-      'title': 'Nuevo Curso ($code)',
-      'code': code,
-      'professor': 'Por asignar',
-      'myGroup': 'Sin grupo',
-      'activeEvals': 0,
-      'completedEvals': 0,
-      'totalEvals': 0,
-    });
+
+    final email = (await _store.currentEmail())?.trim();
+    if (email == null || email.isEmpty) {
+      Get.snackbar('Error', 'No se pudo obtener tu correo de sesión');
+      return;
+    }
+
+    final found = await _store.enrollByCourseCode(email: email, courseCode: code);
+    if (!found) {
+      Get.snackbar('No encontrado', 'No existe un curso con código $code.');
+      return;
+    }
+
+    await loadEnrolledCourses();
     Get.snackbar(
       'Inscripción exitosa',
       'Te has unido al curso con código $code.',
@@ -97,6 +92,17 @@ class StudentController extends GetxController {
       'Has completado una evaluación.',
       snackPosition: SnackPosition.BOTTOM,
     );
+  }
+
+  Future<void> loadEnrolledCourses() async {
+    final email = (await _store.currentEmail())?.trim();
+    if (email == null || email.isEmpty) {
+      enrolledCourses.clear();
+      return;
+    }
+
+    final mapped = await _store.studentCourses(email);
+    enrolledCourses.assignAll(mapped);
   }
 
   void logout() => Get.offAllNamed('/login');

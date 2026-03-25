@@ -23,6 +23,13 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _hideConfirmPassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    _passwordController.text = AuthController.fixedDemoPassword;
+    _confirmPasswordController.text = AuthController.fixedDemoPassword;
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _lastNameController.dispose();
@@ -121,26 +128,15 @@ class _SignUpPageState extends State<SignUpPage> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _hidePassword,
+                      readOnly: true,
                       decoration: InputDecoration(
-                        labelText: 'Contrasena',
+                        labelText: 'Contrasena (fija)',
                         border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() => _hidePassword = !_hidePassword);
-                          },
-                          icon: Icon(
-                            _hidePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
-                        ),
+                        helperText: 'Valor fijo para demo: ThePassword!1',
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Ingresa una contrasena';
-                        }
-                        if (value.length < 6) {
-                          return 'Minimo 6 caracteres';
+                        if (value != AuthController.fixedDemoPassword) {
+                          return 'La contrasena debe ser ThePassword!1';
                         }
                         return null;
                       },
@@ -149,24 +145,13 @@ class _SignUpPageState extends State<SignUpPage> {
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: _hideConfirmPassword,
+                      readOnly: true,
                       decoration: InputDecoration(
-                        labelText: 'Confirmar contrasena',
+                        labelText: 'Confirmar contrasena (fija)',
                         border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              _hideConfirmPassword = !_hideConfirmPassword;
-                            });
-                          },
-                          icon: Icon(
-                            _hideConfirmPassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
-                        ),
                       ),
                       validator: (value) {
-                        if (value != _passwordController.text) {
+                        if (value != AuthController.fixedDemoPassword) {
                           return 'Las contrasenas no coinciden';
                         }
                         return null;
@@ -190,7 +175,6 @@ class _SignUpPageState extends State<SignUpPage> {
                                       lastName: _lastNameController.text,
                                       role: _selectedRole,
                                       email: _emailController.text,
-                                      password: _passwordController.text,
                                       direct: true,
                                     );
 

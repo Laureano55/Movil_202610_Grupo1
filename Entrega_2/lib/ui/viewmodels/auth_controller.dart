@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import '../../auth/domain/repositories/i_auth_repository.dart';
 
 class AuthController extends GetxController {
+  static const String fixedDemoPassword = 'ThePassword!1';
+
   final IAuthRepository _authRepository;
 
   final emailController = TextEditingController();
@@ -48,7 +50,7 @@ class AuthController extends GetxController {
 
   Future<void> loginWithRoble() async {
     final email = emailController.text.trim();
-    final password = passwordController.text;
+    final password = fixedDemoPassword;
 
     if (email.isEmpty || password.isEmpty) {
       throw Exception('Debes ingresar correo y contraseña');
@@ -86,14 +88,13 @@ class AuthController extends GetxController {
     required String lastName,
     required String role,
     required String email,
-    required String password,
     bool direct = true,
   }) async {
     isLoading.value = true;
     try {
       await _authRepository.signUp(
         email.trim(),
-        password,
+        fixedDemoPassword,
         name.trim(),
         direct,
         lastName: lastName.trim(),

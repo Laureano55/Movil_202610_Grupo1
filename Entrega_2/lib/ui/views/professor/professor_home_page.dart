@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../viewmodels/professor_controller.dart';
+import 'course_groups_page.dart';
 import 'import_groups_page.dart';
 
 /// Scroll con rebote suave — máximo 28px de overscroll.
@@ -120,6 +121,13 @@ class ProfessorHomePage extends GetView<ProfessorController> {
                   ),
                   ...controller.courses.map((course) => _CourseCard(
                         course: course,
+                        onTap: () => Get.to(
+                          () => CourseGroupsPage(
+                            courseId: course['id'] as String,
+                            courseTitle: course['title'] as String,
+                            courseCode: course['code'] as String,
+                          ),
+                        ),
                         onPublish: () => controller
                             .publishResults(course['id'] as String),
                         onDelete: () => _confirmDelete(context, course),
@@ -146,7 +154,7 @@ class ProfessorHomePage extends GetView<ProfessorController> {
                           subtitle: 'Desde Brightspace o CSV',
                           color: Color(0xFF3ECFCF),
                           onTap: () {
-                            Get.to(() => ImportGroupsPage());
+                            Get.to(() => const ImportGroupsPage());
                             },
                             ),
                             const _ActionCard(
@@ -303,11 +311,13 @@ class _StatChip extends StatelessWidget {
 
 class _CourseCard extends StatelessWidget {
   final Map<String, dynamic> course;
+  final VoidCallback onTap;
   final VoidCallback onPublish;
   final VoidCallback onDelete;
 
   const _CourseCard({
     required this.course,
+    required this.onTap,
     required this.onPublish,
     required this.onDelete,
   });
@@ -328,9 +338,14 @@ class _CourseCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -412,7 +427,17 @@ class _CourseCard extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 2),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'Toca para ver grupos y miembros',
+                style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+              ),
+            ),
           ],
+        ),
+          ),
         ),
       ),
     );

@@ -10,6 +10,10 @@ class LoginPage extends GetView<AuthController> {
 
   @override
   Widget build(BuildContext context) {
+    if (controller.passwordController.text != AuthController.fixedDemoPassword) {
+      controller.passwordController.text = AuthController.fixedDemoPassword;
+    }
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -83,22 +87,16 @@ class LoginPage extends GetView<AuthController> {
                           () => TextField(
                             controller: controller.passwordController,
                             obscureText: controller.isPasswordHidden.value,
+                            readOnly: true,
                             decoration: InputDecoration(
-                              labelText: 'Contrasena',
+                              labelText: 'Contrasena (fija)',
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 borderSide: BorderSide.none,
                               ),
-                              suffixIcon: IconButton(
-                                onPressed: controller.togglePasswordVisibility,
-                                icon: Icon(
-                                  controller.isPasswordHidden.value
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined,
-                                ),
-                              ),
+                              helperText: 'Valor fijo para demo: ThePassword!1',
                             ),
                           ),
                         ),
