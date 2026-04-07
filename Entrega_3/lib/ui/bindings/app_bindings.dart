@@ -7,6 +7,7 @@ import '../../auth/domain/repositories/i_auth_repository.dart';
 import '../viewmodels/auth_controller.dart';
 import '../viewmodels/professor_controller.dart';
 import '../viewmodels/student_controller.dart';
+import '../viewmodels/evaluation_controller.dart';
 
 class AppBindings extends Bindings {
   @override
@@ -19,18 +20,20 @@ class AppBindings extends Bindings {
       () => AuthRepository(Get.find<IAuthenticationSource>()),
       fenix: true,
     );
-
-    // Siempre disponible (contiene el rol seleccionado)
-    Get.lazyPut<AuthController>(() => AuthController(Get.find<IAuthRepository>()), fenix: true);
-
-    // Controladores por rol — ambos se crean con fenix: true para que
-    // GetX los recicle si se destruyen y vuelven a necesitarse.
+    Get.lazyPut<AuthController>(
+      () => AuthController(Get.find<IAuthRepository>()),
+      fenix: true,
+    );
     Get.lazyPut<ProfessorController>(
       () => ProfessorController(),
       fenix: true,
     );
     Get.lazyPut<StudentController>(
       () => StudentController(),
+      fenix: true,
+    );
+    Get.lazyPut<EvaluationController>(
+      () => EvaluationController(),
       fenix: true,
     );
   }

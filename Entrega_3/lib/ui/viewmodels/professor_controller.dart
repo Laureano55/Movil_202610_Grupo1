@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-
 import '../data/demo_course_store.dart';
 
 class ProfessorController extends GetxController {
@@ -8,8 +7,9 @@ class ProfessorController extends GetxController {
   ProfessorController({DemoCourseStore? demoCourseStore})
       : _store = demoCourseStore ?? DemoCourseStore();
 
-  // ── Estado de cursos ──────────────────────────────────────────────────────
+  // ── Course state ──────────────────────────────────────────────────────────
   final courses = <Map<String, dynamic>>[].obs;
+  final isLoadingCourses = false.obs;
 
   @override
   Future<void> onInit() async {
@@ -17,17 +17,17 @@ class ProfessorController extends GetxController {
     await loadCourses();
   }
 
-  // ── Estadísticas globales ─────────────────────────────────────────────────
+  // ── Computed stats (reactive via courses Rx) ───────────────────────────────
   int get totalStudents =>
-      courses.fold(0, (sum, c) => sum + (c['studentCount'] as int));
+      courses.fold(0, (sum, c) => sum + ((c['studentCount'] as int?) ?? 0));
 
   int get totalPendingEvals =>
-      courses.fold(0, (sum, c) => sum + (c['pendingEvals'] as int));
+      courses.fold(0, (sum, c) => sum + ((c['pendingEvals'] as int?) ?? 0));
 
   int get totalGroups =>
-      courses.fold(0, (sum, c) => sum + (c['groupCount'] as int));
+      courses.fold(0, (sum, c) => sum + ((c['groupCount'] as int?) ?? 0));
 
-  // ── Estado de curso seleccionado ──────────────────────────────────────────
+  // ── Selected course ───────────────────────────────────────────────────────
   final selectedCourseId = RxnString();
 
   void selectCourse(String id) => selectedCourseId.value = id;
@@ -37,44 +37,42 @@ class ProfessorController extends GetxController {
     return courses.firstWhereOrNull((c) => c['id'] == selectedCourseId.value);
   }
 
-  // ── Acciones del profesor ─────────────────────────────────────────────────
-  Future<void> createCourse(String title, String code) async {
-    await _store.createCourse(title: title, code: code);
+  // ── Actions ───────────────────────────────────────────────────────────────
 
-    await loadCourses();
-    Get.snackbar('Curso creado', '"$title" ha sido creado exitosamente.',
-        snackPosition: SnackPosition.BOTTOM);
+  Future<void> loadCourses() async {
+    isLoadingCourses.value = true;
+    try {
+      final mapped = await _store.professorCourseSummaries();
+      courses.assignAll(mapped);
+    } finally {
+      isLoadingCourses.value = false;
+    }
+  }
+
+  Future<void> createCourse(String title, String code) async {
+    try {
+      await _store.createCourse(title: title, code: code);
+      await loadCourses(); // reload so stats update
+      Get.snackbar(
+        'Curso creado',
+        '"$title" ha sido creado exitosamente.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   Future<void> deleteCourse(String id) async {
     final course = courses.firstWhereOrNull((c) => c['id'] == id);
     if (course == null) return;
-
     await _store.deleteCourse(id);
-
     await loadCourses();
     Get.snackbar(
       'Curso eliminado',
       '"${course['title']}" ha sido eliminado.',
       snackPosition: SnackPosition.BOTTOM,
     );
-  }
-
-  void publishResults(String courseId) {
-    final idx = courses.indexWhere((c) => c['id'] == courseId);
-    if (idx == -1) return;
-    courses[idx] = {...courses[idx], 'pendingEvals': 0};
-    courses.refresh();
-    Get.snackbar(
-      'Resultados publicados',
-      'Las evaluaciones del curso han sido publicadas.',
-      snackPosition: SnackPosition.BOTTOM,
-    );
-  }
-
-  Future<void> loadCourses() async {
-    final mapped = await _store.professorCourseSummaries();
-    courses.assignAll(mapped);
   }
 
   void logout() => Get.offAllNamed('/login');
