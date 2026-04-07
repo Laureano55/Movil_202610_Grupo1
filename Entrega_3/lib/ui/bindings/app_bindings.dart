@@ -8,10 +8,12 @@ import '../viewmodels/auth_controller.dart';
 import '../viewmodels/professor_controller.dart';
 import '../viewmodels/student_controller.dart';
 import '../viewmodels/evaluation_controller.dart';
+import '../viewmodels/count_controller.dart';
 
 class AppBindings extends Bindings {
   @override
   void dependencies() {
+    // Auth layer
     Get.lazyPut<IAuthenticationSource>(
       () => AuthenticationSourceServiceRoble(),
       fenix: true,
@@ -24,6 +26,8 @@ class AppBindings extends Bindings {
       () => AuthController(Get.find<IAuthRepository>()),
       fenix: true,
     );
+
+    // Feature controllers
     Get.lazyPut<ProfessorController>(
       () => ProfessorController(),
       fenix: true,
@@ -34,6 +38,12 @@ class AppBindings extends Bindings {
     );
     Get.lazyPut<EvaluationController>(
       () => EvaluationController(),
+      fenix: true,
+    );
+
+    // Shared controllers
+    Get.lazyPut<CountController>(
+      () => CountController(),
       fenix: true,
     );
   }

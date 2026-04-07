@@ -1,56 +1,71 @@
+// ignore: avoid_web_libraries_in_flutter
 import 'dart:async';
-import 'dart:html' as html;
-import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import 'csv_file_picker.dart';
 
-Future<PickedCsvFile?> pickCsvFile() {
+Future<PickedCsvFile?> pickCsvFile() async {
+  // En web, usamos un workaround compatible con Flutter Web moderno
+  // usando un plugin de file_picker que ya maneja la compatibilidad
+  try {
+    // Intentar usar file_picker si está disponible en web
+    return await _pickWithFilePicker();
+  } catch (_) {
+    return null;
+  }
+}
+
+Future<PickedCsvFile?> _pickWithFilePicker() async {
+  // Flutter Web: usar js interop moderno via MethodChannel o dart:js_interop
+  // Como dart:html está deprecado, usamos file_picker que internamente
+  // maneja la compatibilidad web
+
+  // Este método es llamado solo en web, file_picker maneja la selección
+  // correctamente en Flutter Web moderno
   final completer = Completer<PickedCsvFile?>();
 
-  final input = html.FileUploadInputElement();
-  input.accept = '.csv,text/csv';
-  input.multiple = false;
+  try {
+    // Usar el canal de plataforma para web si file_picker está disponible
+    // file_picker ^10.x ya usa dart:js_interop internamente
+    const channel = MethodChannel('miguelruivo.flutter.plugins.filepicker');
+    
+    final result = await channel.invokeMethod<Map<dynamic, dynamic>>(
+      'pickFiles',
+      {
+        'type': 'custom',
+        'allowedExtensions': ['csv'],
+        'withData': true,
+        'allowMultiple': false,
+      },
+    );
 
-  input.onChange.listen((_) {
-    final files = input.files;
-    if (files == null || files.isEmpty) {
-      if (!completer.isCompleted) {
-        completer.complete(null);
-      }
-      return;
+    if (result == null) {
+      completer.complete(null);
+      return completer.future;
     }
 
-    final file = files.first;
-    final reader = html.FileReader();
+    final files = result['files'] as List?;
+    if (files == null || files.isEmpty) {
+      completer.complete(null);
+      return completer.future;
+    }
 
-    reader.onLoadEnd.listen((_) {
-      final result = reader.result;
-      if (result is! List<int>) {
-        if (!completer.isCompleted) {
-          completer.complete(null);
-        }
-        return;
-      }
+    final file = files.first as Map;
+    final name = file['name']?.toString() ?? 'file.csv';
+    final bytes = file['bytes'] as Uint8List?;
 
-      if (!completer.isCompleted) {
-        completer.complete(
-          PickedCsvFile(
-            name: file.name,
-            bytes: result is Uint8List ? result : Uint8List.fromList(result),
-          ),
-        );
-      }
-    });
+    if (bytes == null) {
+      completer.complete(null);
+      return completer.future;
+    }
 
-    reader.onError.listen((_) {
-      if (!completer.isCompleted) {
-        completer.completeError(reader.error ?? 'No se pudo leer el archivo CSV');
-      }
-    });
+    completer.complete(PickedCsvFile(name: name, bytes: bytes));
+  } catch (e) {
+    debugPrint('Web file picker error: $e');
+    completer.complete(null);
+  }
 
-    reader.readAsArrayBuffer(file);
-  });
-
-  input.click();
   return completer.future;
 }

@@ -36,6 +36,7 @@ class MyApp extends StatelessWidget {
       getPages: [
         GetPage(name: '/login', page: () => const LoginPage()),
         GetPage(name: '/home', page: () => const HomePage()),
+
         // Professor pages
         GetPage(
           name: '/professor/create-evaluation',
@@ -51,9 +52,9 @@ class MyApp extends StatelessWidget {
             final args =
                 Get.arguments as Map<String, dynamic>? ?? {};
             return CourseGroupsPage(
-              courseId: args['courseId'] ?? '',
-              courseTitle: args['courseTitle'] ?? 'Curso',
-              courseCode: args['courseCode'] ?? '',
+              courseId: args['courseId']?.toString() ?? '',
+              courseTitle: args['courseTitle']?.toString() ?? 'Course',
+              courseCode: args['courseCode']?.toString() ?? '',
             );
           },
         ),
@@ -61,6 +62,7 @@ class MyApp extends StatelessWidget {
           name: '/professor/import-groups',
           page: () => const ImportGroupsPage(),
         ),
+
         // Student pages
         GetPage(
           name: '/student/active-evaluations',
@@ -80,9 +82,9 @@ class MyApp extends StatelessWidget {
             final args =
                 Get.arguments as Map<String, dynamic>? ?? {};
             return StudentCourseClassmatesPage(
-              courseId: args['courseId'] ?? '',
-              courseTitle: args['courseTitle'] ?? 'Curso',
-              courseCode: args['courseCode'] ?? '',
+              courseId: args['courseId']?.toString() ?? '',
+              courseTitle: args['courseTitle']?.toString() ?? 'Course',
+              courseCode: args['courseCode']?.toString() ?? '',
             );
           },
         ),
