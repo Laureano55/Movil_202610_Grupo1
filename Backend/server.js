@@ -5,10 +5,14 @@ const importRoutes = require("./routes/importRoutes");
 
 const app = express();
 
+const evaluationRoutes = require("./routes/evaluationRoutes");
+
 app.use(cors());
 app.use(express.json());
 
 app.use("/api", importRoutes);
+
+app.use("/api/evaluations", evaluationRoutes);
 
 const PORT = 3000;
 
