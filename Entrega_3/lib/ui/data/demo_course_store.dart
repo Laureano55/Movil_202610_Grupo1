@@ -42,6 +42,15 @@ class DemoCourseStore {
 
   bool _loaded = false;
 
+  void resetForTests() {
+    _courses = [];
+    _categories = [];
+    _members = [];
+    _evaluations = [];
+    _responses = [];
+    _loaded = false;
+  }
+
   // ── Load/persist ──────────────────────────────────────────────────────────
   Future<void> _ensureLoaded() async {
     if (_loaded) return;

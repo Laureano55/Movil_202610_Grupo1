@@ -9,6 +9,7 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     Get.reset();
+    DemoCourseStore().resetForTests();
   });
 
   tearDown(() {
@@ -335,7 +336,7 @@ void main() {
 
       final marioResult = byStudent.firstWhere(
         (s) => s['email'] == 'mario@uninorte.edu.co',
-        orElse: () => {},
+        orElse: () => <String, dynamic>{},
       );
       expect(marioResult.isNotEmpty, true);
       expect(marioResult['overallAverage'], closeTo(4.5, 0.01));
