@@ -336,8 +336,3 @@ class _EvalCard extends StatelessWidget {
     );
   }
 }
-
-// ignore: unused_element
-extension _IconData on Icons {
-  static const course_rounded = Icons.school_rounded;
-}

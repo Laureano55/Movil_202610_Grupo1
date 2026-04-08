@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../viewmodels/evaluation_controller.dart';
-import '../../viewmodels/professor_controller.dart';
 
 class EvaluationResultsPage extends StatefulWidget {
   const EvaluationResultsPage({super.key});

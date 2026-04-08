@@ -133,12 +133,6 @@ class _ResultCard extends StatelessWidget {
 
   static const _primary = Color(0xFF4B3CF0);
 
-  Color _scoreColor(double avg) {
-    if (avg >= 4.0) return Colors.green;
-    if (avg >= 3.0) return Colors.orange;
-    return Colors.red;
-  }
-
   @override
   Widget build(BuildContext context) {
     final eval = (result['evaluation'] as Map<String, dynamic>?) ?? {};

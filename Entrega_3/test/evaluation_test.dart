@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'dart:convert';
 
-import 'package:tu_proyecto/data/datasources/evaluation_datasource.dart';
-import 'package:tu_proyecto/data/repositories/evaluation_repository.dart';
+import 'package:f_getxstate_demo/data/datasorces/evaluation_datasource.dart';
+import 'package:f_getxstate_demo/data/datasorces/repositories/evaluation_repository.dart';
 
 void main() {
 
