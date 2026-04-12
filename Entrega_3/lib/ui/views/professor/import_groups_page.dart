@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../viewmodels/csv_import_controller.dart';
 import '../../viewmodels/professor_controller.dart';
+import '../../../domain/repositories/i_course_repository.dart';
 
 class ImportGroupsPage extends StatefulWidget {
   const ImportGroupsPage({super.key});
@@ -13,7 +14,8 @@ class ImportGroupsPage extends StatefulWidget {
 
 class _ImportGroupsPageState extends State<ImportGroupsPage> {
   late final CsvImportController controller;
-  final ProfessorController professorController = Get.find<ProfessorController>();
+  final ProfessorController professorController =
+      Get.find<ProfessorController>();
 
   String? selectedCourseId;
   String? selectedCourseCode;
@@ -21,10 +23,10 @@ class _ImportGroupsPageState extends State<ImportGroupsPage> {
   @override
   void initState() {
     super.initState();
-    // Usar findOrPut para evitar duplicados si ya fue registrado
+    // Pasar ICourseRepository al crear CsvImportController
     controller = Get.isRegistered<CsvImportController>()
         ? Get.find<CsvImportController>()
-        : Get.put(CsvImportController());
+        : Get.put(CsvImportController(Get.find<ICourseRepository>()));
 
     final first = professorController.courses.firstOrNull;
     if (first != null) {
@@ -37,7 +39,6 @@ class _ImportGroupsPageState extends State<ImportGroupsPage> {
   Widget build(BuildContext context) {
     final courses = professorController.courses;
 
-    // Sincronizar selección si courses cambió y no hay selección
     if (selectedCourseId == null && courses.isNotEmpty) {
       final first = courses.first;
       selectedCourseId = first['id'] as String?;
@@ -83,7 +84,8 @@ class _ImportGroupsPageState extends State<ImportGroupsPage> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0EFFE),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF4B3CF0).withOpacity(0.3)),
+                  border: Border.all(
+                      color: const Color(0xFF4B3CF0).withOpacity(0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,8 +131,8 @@ class _ImportGroupsPageState extends State<ImportGroupsPage> {
               ),
               const SizedBox(height: 20),
 
-              // Selector de curso
               if (courses.isEmpty) ...[
+                // Sin cursos: mostrar mensaje para crear uno primero
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -152,25 +154,15 @@ class _ImportGroupsPageState extends State<ImportGroupsPage> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Crea primero un curso para poder importar grupos.',
+                        'Crea primero un curso en el panel principal para poder importar grupos.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Color(0xFF6B7280)),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
-                        onPressed: () async {
-                          await professorController.createCourse(
-                              'Curso Demo', 'DEMO-001');
-                          final first = professorController.courses.firstOrNull;
-                          if (first != null) {
-                            setState(() {
-                              selectedCourseId = first['id'] as String?;
-                              selectedCourseCode = first['code'] as String?;
-                            });
-                          }
-                        },
-                        icon: const Icon(Icons.add_rounded),
-                        label: const Text('Crear curso demo'),
+                        onPressed: () => Get.back(),
+                        icon: const Icon(Icons.arrow_back),
+                        label: const Text('Volver al panel'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4B3CF0),
                           foregroundColor: Colors.white,
@@ -180,6 +172,7 @@ class _ImportGroupsPageState extends State<ImportGroupsPage> {
                   ),
                 ),
               ] else ...[
+                // Selector de curso
                 const Text(
                   'Seleccionar curso',
                   style: TextStyle(

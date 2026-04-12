@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../data/demo_course_store.dart';
+
+import '../../../domain/repositories/i_course_repository.dart';
 
 class CourseGroupsPage extends StatefulWidget {
   final String courseId;
@@ -20,18 +21,20 @@ class CourseGroupsPage extends StatefulWidget {
 
 class _CourseGroupsPageState extends State<CourseGroupsPage> {
   static const _primary = Color(0xFF4B3CF0);
-  final DemoCourseStore _store = DemoCourseStore();
+
+  ICourseRepository get _repo => Get.find<ICourseRepository>();
+
   late Future<List<Map<String, dynamic>>> _groupsFuture;
 
   @override
   void initState() {
     super.initState();
-    _groupsFuture = _store.professorCourseGroups(widget.courseId);
+    _groupsFuture = _repo.professorCourseGroups(widget.courseId);
   }
 
   Future<void> _reload() async {
     setState(() {
-      _groupsFuture = _store.professorCourseGroups(widget.courseId);
+      _groupsFuture = _repo.professorCourseGroups(widget.courseId);
     });
     await _groupsFuture;
   }
@@ -77,7 +80,6 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
           ],
         ),
         actions: [
-          // Sync Updates button (Import from Brightspace)
           IconButton(
             icon: const Icon(Icons.sync_rounded),
             tooltip: 'Sync Updates / Import CSV',
@@ -105,8 +107,23 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Text('Error: ${snapshot.error}',
-                    style: const TextStyle(color: Color(0xFFB00020))),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: Color(0xFFB00020), size: 48),
+                    const SizedBox(height: 12),
+                    Text('Error: ${snapshot.error}',
+                        style: const TextStyle(color: Color(0xFFB00020)),
+                        textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: _reload,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
               ),
             );
           }
@@ -127,8 +144,8 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF0EFFE),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF0EFFE),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.groups_outlined,
@@ -136,7 +153,7 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
                           ),
                           const SizedBox(height: 24),
                           const Text(
-                            'No groups in this course',
+                            'No hay grupos en este curso',
                             style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 18,
@@ -144,7 +161,7 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            'Import groups from Brightspace using a CSV export file.',
+                            'Importa grupos desde Brightspace usando un archivo CSV.',
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Color(0xFF6B7280)),
                           ),
@@ -152,24 +169,10 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
                           ElevatedButton.icon(
                             onPressed: _goToImport,
                             icon: const Icon(Icons.upload_file_rounded),
-                            label: const Text('Import CSV'),
+                            label: const Text('Importar CSV'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _primary,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          OutlinedButton.icon(
-                            onPressed: _goToResults,
-                            icon: const Icon(Icons.sync_alt_rounded),
-                            label: const Text('Sync Updates'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: _primary,
-                              side: const BorderSide(color: _primary),
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 24, vertical: 14),
                               shape: RoundedRectangleBorder(
@@ -189,7 +192,6 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
             onRefresh: _reload,
             child: Column(
               children: [
-                // Summary bar with import buttons
                 Container(
                   color: Colors.white,
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -197,20 +199,19 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
                     children: [
                       _SummaryChip(
                         icon: Icons.folder_rounded,
-                        label: '${groups.length} groups',
+                        label: '${groups.length} grupos',
                       ),
                       const SizedBox(width: 8),
                       _SummaryChip(
                         icon: Icons.people_rounded,
                         label:
-                            '${groups.fold<int>(0, (s, g) => s + ((g['memberCount'] as int?) ?? 0))} students',
+                            '${groups.fold<int>(0, (s, g) => s + ((g['memberCount'] as int?) ?? 0))} estudiantes',
                       ),
                       const Spacer(),
-                      // Import Selected Categories button
                       TextButton.icon(
                         onPressed: _goToImport,
                         icon: const Icon(Icons.upload_rounded, size: 16),
-                        label: const Text('Import',
+                        label: const Text('Importar',
                             style: TextStyle(fontSize: 12)),
                         style: TextButton.styleFrom(
                           foregroundColor: _primary,
@@ -221,8 +222,6 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
                     ],
                   ),
                 ),
-
-                // Action buttons row
                 Container(
                   color: const Color(0xFFF9FAFB),
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -231,7 +230,7 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
                       Expanded(
                         child: _ActionButton(
                           icon: Icons.rate_review_rounded,
-                          label: 'Create Evaluation',
+                          label: 'Crear Evaluación',
                           color: const Color(0xFF059669),
                           onTap: _goToCreateEvaluation,
                         ),
@@ -240,7 +239,7 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
                       Expanded(
                         child: _ActionButton(
                           icon: Icons.bar_chart_rounded,
-                          label: 'View Results',
+                          label: 'Ver Resultados',
                           color: const Color(0xFFD97706),
                           onTap: _goToResults,
                         ),
@@ -249,7 +248,7 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
                       Expanded(
                         child: _ActionButton(
                           icon: Icons.sync_rounded,
-                          label: 'Sync Updates',
+                          label: 'Sync CSV',
                           color: _primary,
                           onTap: _goToImport,
                         ),
@@ -257,8 +256,6 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
                     ],
                   ),
                 ),
-
-                // Groups list
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -294,7 +291,7 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
                               style: const TextStyle(
                                   fontWeight: FontWeight.w700)),
                           subtitle: Text(
-                            '${members.length} member${members.length == 1 ? '' : 's'}',
+                            '${members.length} miembro${members.length == 1 ? '' : 's'}',
                             style: const TextStyle(
                                 color: Color(0xFF6B7280), fontSize: 12),
                           ),
@@ -334,7 +331,7 @@ class _CourseGroupsPageState extends State<CourseGroupsPage> {
                                   Padding(
                                     padding: EdgeInsets.all(8),
                                     child: Text(
-                                      'No members yet. Import a CSV to assign students.',
+                                      'Sin miembros. Importa un CSV para asignar estudiantes.',
                                       style: TextStyle(
                                           color: Color(0xFF6B7280),
                                           fontStyle: FontStyle.italic),

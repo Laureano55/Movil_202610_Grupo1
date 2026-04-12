@@ -3,7 +3,8 @@ import 'package:get/get.dart';
 import '../../viewmodels/evaluation_controller.dart';
 import '../../viewmodels/auth_controller.dart';
 import '../../viewmodels/professor_controller.dart';
-import '../../data/demo_course_store.dart';
+import '../../data/kCriteria.dart';
+import '../../../core/auth_utils.dart';
 
 class CreateEvaluationPage extends StatefulWidget {
   const CreateEvaluationPage({super.key});
@@ -132,8 +133,9 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
 
     setState(() => _loading = true);
     try {
+      // Usar getCurrentEmail() de auth_utils en lugar de DemoCourseStore
       final auth = Get.find<AuthController>();
-      final professorEmail = (await DemoCourseStore().currentEmail()) ??
+      final professorEmail = (await getCurrentEmail()) ??
           auth.emailController.text.trim();
 
       await Get.find<EvaluationController>().createEvaluation(
@@ -149,7 +151,6 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
         professorEmail: professorEmail,
       );
 
-      // Refresh professor home stats
       if (Get.isRegistered<ProfessorController>()) {
         Get.find<ProfessorController>().loadCourses();
       }
@@ -174,7 +175,6 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // Course chip
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -197,7 +197,6 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
             ),
             const SizedBox(height: 20),
 
-            // ── Step 1: Basic Info ────────────────────────────────────────
             _SectionHeader(step: '1', title: 'Información básica'),
             const SizedBox(height: 12),
             TextFormField(
@@ -214,15 +213,14 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
                   : null,
             ),
             const SizedBox(height: 16),
-            // Category selector
             _categories.isEmpty
                 ? Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                         color: Colors.orange.shade50,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                            color: Colors.orange.shade200)),
+                        border:
+                            Border.all(color: Colors.orange.shade200)),
                     child: Row(
                       children: [
                         Icon(Icons.warning_amber_rounded,
@@ -254,7 +252,6 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
                   ),
             const SizedBox(height: 24),
 
-            // ── Step 2: Time Window ───────────────────────────────────────
             _SectionHeader(step: '2', title: 'Ventana de tiempo'),
             const SizedBox(height: 12),
             Row(
@@ -280,7 +277,6 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
             ),
             const SizedBox(height: 24),
 
-            // ── Step 3: Visibility ────────────────────────────────────────
             _SectionHeader(step: '3', title: 'Visibilidad de resultados'),
             const SizedBox(height: 12),
             Row(
@@ -300,7 +296,7 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
                   child: _VisibilityOption(
                     icon: Icons.visibility_rounded,
                     label: 'Público',
-                    subtitle: 'Los estudiantes ven sus propios resultados',
+                    subtitle: 'Estudiantes ven sus resultados',
                     selected: _visibility == 'public',
                     onTap: () =>
                         setState(() => _visibility = 'public'),
@@ -310,7 +306,6 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
             ),
             const SizedBox(height: 24),
 
-            // ── Step 4: Rules ─────────────────────────────────────────────
             _SectionHeader(step: '4', title: 'Reglas de evaluación'),
             const SizedBox(height: 12),
             Container(
@@ -331,7 +326,6 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
             ),
             const SizedBox(height: 24),
 
-            // ── Step 5: Criteria ──────────────────────────────────────────
             _SectionHeader(step: '5', title: 'Criterios de evaluación'),
             const SizedBox(height: 12),
             ...kAllCriteria.map((criterion) => Container(
@@ -373,7 +367,6 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
                 )),
             const SizedBox(height: 32),
 
-            // ── Submit button ─────────────────────────────────────────────
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -466,8 +459,7 @@ class _DateTile extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(label,
                     style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF6B7280))),
+                        fontSize: 12, color: Color(0xFF6B7280))),
               ],
             ),
             const SizedBox(height: 6),
@@ -515,7 +507,8 @@ class _VisibilityOption extends StatelessWidget {
             Row(
               children: [
                 Icon(icon,
-                    color: selected ? _primary : const Color(0xFF6B7280),
+                    color:
+                        selected ? _primary : const Color(0xFF6B7280),
                     size: 20),
                 const Spacer(),
                 if (selected)

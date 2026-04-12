@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-import '../../data/demo_course_store.dart';
+import '../../../core/auth_utils.dart';
+import '../../../domain/repositories/i_course_repository.dart';
 
 class StudentCourseClassmatesPage extends StatefulWidget {
   final String courseId;
@@ -21,7 +23,8 @@ class StudentCourseClassmatesPage extends StatefulWidget {
 
 class _StudentCourseClassmatesPageState
     extends State<StudentCourseClassmatesPage> {
-  final DemoCourseStore _store = DemoCourseStore();
+  ICourseRepository get _repo => Get.find<ICourseRepository>();
+
   late Future<Map<String, dynamic>> _classmatesFuture;
 
   @override
@@ -31,7 +34,7 @@ class _StudentCourseClassmatesPageState
   }
 
   Future<Map<String, dynamic>> _loadClassmates() async {
-    final email = (await _store.currentEmail())?.trim();
+    final email = (await getCurrentEmail())?.trim();
     if (email == null || email.isEmpty) {
       return {
         'myGroup': 'Sin grupo',
@@ -39,7 +42,7 @@ class _StudentCourseClassmatesPageState
       };
     }
 
-    return _store.studentCourseClassmates(
+    return _repo.studentCourseClassmates(
       courseId: widget.courseId,
       email: email,
     );
@@ -59,7 +62,23 @@ class _StudentCourseClassmatesPageState
       appBar: AppBar(
         backgroundColor: const Color(0xFF4B3CF0),
         foregroundColor: Colors.white,
-        title: Text(widget.courseTitle),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.courseTitle,
+                style: const TextStyle(fontWeight: FontWeight.w700)),
+            if (widget.courseCode.isNotEmpty)
+              Text(widget.courseCode,
+                  style: const TextStyle(
+                      fontSize: 12, color: Colors.white70)),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: _reload,
+          ),
+        ],
       ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _classmatesFuture,
@@ -72,10 +91,24 @@ class _StudentCourseClassmatesPageState
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Text(
-                  'No se pudieron cargar tus compañeros.\n${snapshot.error}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFFB00020)),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: Color(0xFFB00020), size: 48),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No se pudieron cargar tus compañeros.\n${snapshot.error}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xFFB00020)),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: _reload,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Reintentar'),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -91,14 +124,17 @@ class _StudentCourseClassmatesPageState
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               children: [
+                // Mi grupo card
                 Card(
+                  elevation: 0.8,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: ListTile(
                     leading: const CircleAvatar(
                       backgroundColor: Color(0xFFEAE7FF),
-                      child: Icon(Icons.group_rounded, color: Color(0xFF4B3CF0)),
+                      child: Icon(Icons.group_rounded,
+                          color: Color(0xFF4B3CF0)),
                     ),
                     title: const Text(
                       'Tu grupo',
@@ -107,33 +143,107 @@ class _StudentCourseClassmatesPageState
                     subtitle: Text(myGroup),
                   ),
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  'Compañeros de tu grupo',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A2E),
+                const SizedBox(height: 16),
+
+                // Título compañeros
+                Row(
+                  children: [
+                    const Icon(Icons.people_rounded,
+                        color: Color(0xFF4B3CF0), size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Compañeros de tu grupo',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1A1A2E),
+                          ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEAE7FF),
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      child: Text(
+                        '${classmates.length}',
+                        style: const TextStyle(
+                            color: Color(0xFF4B3CF0),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
+
                 if (classmates.isEmpty)
-                  const Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text(
-                        'Aún no hay compañeros en tu grupo.',
-                        style: TextStyle(color: Color(0xFF6B7280)),
-                      ),
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border:
+                          Border.all(color: const Color(0xFFE5E7EB)),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.group_off_rounded,
+                            size: 40, color: Color(0xFF9CA3AF)),
+                        const SizedBox(height: 12),
+                        Text(
+                          myGroup == 'Sin grupo'
+                              ? 'Aún no estás asignado a ningún grupo.'
+                              : 'No hay compañeros en tu grupo todavía.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              color: Color(0xFF6B7280)),
+                        ),
+                      ],
                     ),
                   )
                 else
                   ...classmates.map(
-                    (mate) => Card(
+                    (mate) => Container(
                       margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2)),
+                        ],
+                      ),
                       child: ListTile(
-                        leading: const Icon(Icons.person_rounded),
-                        title: Text((mate['name'] ?? '').toString()),
-                        subtitle: Text((mate['email'] ?? '').toString()),
+                        leading: CircleAvatar(
+                          backgroundColor: const Color(0xFFEAE7FF),
+                          child: Text(
+                            ((mate['name'] ?? '').toString().isNotEmpty
+                                ? (mate['name'] as String)[0]
+                                    .toUpperCase()
+                                : '?'),
+                            style: const TextStyle(
+                                color: Color(0xFF4B3CF0),
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        title: Text(
+                          (mate['name'] ?? '').toString(),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          (mate['email'] ?? '').toString(),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF6B7280)),
+                        ),
                       ),
                     ),
                   ),
