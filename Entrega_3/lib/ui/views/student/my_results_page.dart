@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../viewmodels/evaluation_controller.dart';
-import '../../data/demo_course_store.dart';
+import '/core/auth_utils.dart';
 
 class MyResultsPage extends StatefulWidget {
   const MyResultsPage({super.key});
@@ -24,7 +24,7 @@ class _MyResultsPageState extends State<MyResultsPage> {
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try {
-      final email = await DemoCourseStore().currentEmail();
+      final email = await getCurrentEmail();
       if (email != null) {
         await _evalCtrl.loadMyResults(email);
       }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../viewmodels/evaluation_controller.dart';
-import '../../data/demo_course_store.dart';
+import '../../../core/auth_utils.dart';
+import '../../../ui/data/kCriteria.dart';
 
 class EvaluationFormPage extends StatefulWidget {
   const EvaluationFormPage({super.key});
@@ -19,27 +20,30 @@ class _EvaluationFormPageState extends State<EvaluationFormPage> {
   final EvaluationController _evalCtrl = Get.find();
   String? _currentEmail;
 
-  // selectedPerson -> {criterion -> score}
   Map<String, dynamic>? _currentTeammate;
   final Map<String, int> _currentScores = {};
-
   bool _loading = false;
 
   @override
   void initState() {
     super.initState();
     _eval = Get.arguments as Map<String, dynamic>? ?? {};
-    _criteria = (_eval['criteria'] as List<dynamic>? ?? [])
-        .map((c) => c.toString())
-        .toList();
+    // Soportar tanto camelCase como snake_case
+    final criteriaRaw = _eval['criteria'];
+    if (criteriaRaw is List) {
+      _criteria = criteriaRaw.map((e) => e.toString()).toList();
+    } else {
+      _criteria = [];
+    }
     _loadTeammates();
   }
 
   Future<void> _loadTeammates() async {
-    _currentEmail = await DemoCourseStore().currentEmail();
+    _currentEmail = await getCurrentEmail();
     if (_currentEmail != null) {
+      final evalId = (_eval['id'] ?? _eval['_id'] ?? '').toString();
       await _evalCtrl.loadTeammatesForEvaluation(
-        evaluationId: _eval['id'].toString(),
+        evaluationId: evalId,
         evaluatorEmail: _currentEmail!,
       );
     }
@@ -49,14 +53,11 @@ class _EvaluationFormPageState extends State<EvaluationFormPage> {
     setState(() {
       _currentTeammate = teammate;
       _currentScores.clear();
-      // Pre-fill if already rated
       final existing = teammate['existingScores'];
       if (existing != null && existing is Map) {
         for (final criterion in _criteria) {
           final val = existing[criterion];
-          if (val != null) {
-            _currentScores[criterion] = (val as num).toInt();
-          }
+          if (val != null) _currentScores[criterion] = (val as num).toInt();
         }
       }
     });
@@ -73,8 +74,9 @@ class _EvaluationFormPageState extends State<EvaluationFormPage> {
 
     setState(() => _loading = true);
     try {
+      final evalId = (_eval['id'] ?? _eval['_id'] ?? '').toString();
       final success = await _evalCtrl.submitResponse(
-        evaluationId: _eval['id'].toString(),
+        evaluationId: evalId,
         evaluatorEmail: _currentEmail!,
         evaluateeEmail: _currentTeammate!['email'].toString(),
         scores: Map<String, int>.from(_currentScores),
@@ -84,7 +86,6 @@ class _EvaluationFormPageState extends State<EvaluationFormPage> {
           _currentTeammate = null;
           _currentScores.clear();
         });
-        // Check if all done
         final remaining =
             _evalCtrl.currentTeammates.where((t) => t['alreadyRated'] == false);
         if (remaining.isEmpty) {
@@ -109,7 +110,7 @@ class _EvaluationFormPageState extends State<EvaluationFormPage> {
         backgroundColor: _primary,
         foregroundColor: Colors.white,
         title: Text(
-          _eval['activityName']?.toString() ?? 'Evaluación',
+          (_eval['activityName'] ?? _eval['activity_name'] ?? 'Evaluación').toString(),
           style: const TextStyle(fontWeight: FontWeight.w700),
           overflow: TextOverflow.ellipsis,
         ),
@@ -122,7 +123,6 @@ class _EvaluationFormPageState extends State<EvaluationFormPage> {
 
         return Column(
           children: [
-            // Progress header
             Container(
               color: Colors.white,
               padding: const EdgeInsets.all(16),
@@ -154,8 +154,7 @@ class _EvaluationFormPageState extends State<EvaluationFormPage> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
-                      value:
-                          teammates.isEmpty ? 0 : done / teammates.length,
+                      value: teammates.isEmpty ? 0 : done / teammates.length,
                       backgroundColor: const Color(0xFFE5E7EB),
                       color: pending == 0 ? Colors.green : _primary,
                       minHeight: 8,
@@ -164,7 +163,6 @@ class _EvaluationFormPageState extends State<EvaluationFormPage> {
                 ],
               ),
             ),
-
             Expanded(
               child: _currentTeammate == null
                   ? _TeammateList(
@@ -205,7 +203,6 @@ class _TeammateList extends StatelessWidget {
           child: Text('Sin compañeros para evaluar',
               style: TextStyle(color: Color(0xFF9CA3AF))));
     }
-
     return ListView.builder(
       padding: const EdgeInsets.all(20),
       itemCount: teammates.length,
@@ -219,9 +216,7 @@ class _TeammateList extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
-            border: rated
-                ? Border.all(color: Colors.green.shade200)
-                : null,
+            border: rated ? Border.all(color: Colors.green.shade200) : null,
             boxShadow: [
               BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -233,13 +228,13 @@ class _TeammateList extends StatelessWidget {
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: CircleAvatar(
-              backgroundColor: rated
-                  ? Colors.green.shade100
-                  : const Color(0xFFEAE7FF),
+              backgroundColor:
+                  rated ? Colors.green.shade100 : const Color(0xFFEAE7FF),
               child: Icon(
                 rated ? Icons.check_rounded : Icons.person_rounded,
-                color:
-                    rated ? Colors.green.shade700 : const Color(0xFF4B3CF0),
+                color: rated
+                    ? Colors.green.shade700
+                    : const Color(0xFF4B3CF0),
               ),
             ),
             title: Text(
@@ -313,7 +308,6 @@ class _RatingForm extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // Teammate card
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -351,14 +345,11 @@ class _RatingForm extends StatelessWidget {
                 ),
               ),
               if (alreadyRated)
-                const Icon(Icons.edit_rounded,
-                    color: _primary, size: 20),
+                const Icon(Icons.edit_rounded, color: _primary, size: 20),
             ],
           ),
         ),
         const SizedBox(height: 20),
-
-        // Criteria
         const Text('Calificación por criterios (1-5)',
             style: TextStyle(
                 fontWeight: FontWeight.w700,
@@ -368,7 +359,6 @@ class _RatingForm extends StatelessWidget {
         const Text('1 = Deficiente  ·  5 = Excelente',
             style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
         const SizedBox(height: 16),
-
         ...criteria.map((criterion) => Container(
               margin: const EdgeInsets.only(bottom: 14),
               padding: const EdgeInsets.all(16),
@@ -392,11 +382,9 @@ class _RatingForm extends StatelessWidget {
                           children: [
                             Text(criterion,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 14)),
+                                    fontWeight: FontWeight.w700, fontSize: 14)),
                             if (kCriteriaDescriptions[criterion] != null)
-                              Text(
-                                  kCriteriaDescriptions[criterion]!,
+                              Text(kCriteriaDescriptions[criterion]!,
                                   style: const TextStyle(
                                       fontSize: 11,
                                       color: Color(0xFF6B7280))),
@@ -443,10 +431,9 @@ class _RatingForm extends StatelessWidget {
                             boxShadow: selected
                                 ? [
                                     BoxShadow(
-                                      color: _primary.withOpacity(0.4),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    )
+                                        color: _primary.withOpacity(0.4),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2))
                                   ]
                                 : [],
                           ),
@@ -469,9 +456,7 @@ class _RatingForm extends StatelessWidget {
                 ],
               ),
             )),
-
         const SizedBox(height: 24),
-
         Row(
           children: [
             Expanded(
@@ -507,8 +492,7 @@ class _RatingForm extends StatelessWidget {
                         alreadyRated
                             ? 'Actualizar calificación'
                             : 'Enviar calificación',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700)),
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
               ),
             ),
           ],

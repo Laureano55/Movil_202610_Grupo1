@@ -1,13 +1,12 @@
 import 'package:get/get.dart';
-import '../data/demo_course_store.dart';
+import '../../domain/repositories/i_course_repository.dart';
 
 class StudentController extends GetxController {
-  final DemoCourseStore _store;
+  final ICourseRepository _courseRepo;
 
-  StudentController({DemoCourseStore? demoCourseStore})
-      : _store = demoCourseStore ?? DemoCourseStore();
+  StudentController(this._courseRepo);
 
-  // ── Enrolled courses ──────────────────────────────────────────────────────
+  // ── State ──────────────────────────────────────────────────────────────────
   final enrolledCourses = <Map<String, dynamic>>[].obs;
   final isLoadingCourses = false.obs;
 
@@ -17,13 +16,11 @@ class StudentController extends GetxController {
     await loadEnrolledCourses();
   }
 
-  // ── Stats ──────────────────────────────────────────────────────────────────
+  // ── Computed stats ─────────────────────────────────────────────────────────
   int get totalActiveEvals =>
       enrolledCourses.fold(0, (sum, c) => sum + ((c['activeEvals'] as int?) ?? 0));
-
   int get totalCompleted =>
       enrolledCourses.fold(0, (sum, c) => sum + ((c['completedEvals'] as int?) ?? 0));
-
   double get overallProgress {
     final total = enrolledCourses.fold(
         0, (sum, c) => sum + ((c['totalEvals'] as int?) ?? 0));
@@ -31,7 +28,7 @@ class StudentController extends GetxController {
     return totalCompleted / total;
   }
 
-  // ── Selected course ───────────────────────────────────────────────────────
+  // ── Selected course ────────────────────────────────────────────────────────
   final selectedCourseId = RxnString();
   void selectCourse(String id) => selectedCourseId.value = id;
   Map<String, dynamic>? get selectedCourse =>
@@ -40,47 +37,60 @@ class StudentController extends GetxController {
           : enrolledCourses
               .firstWhereOrNull((c) => c['id'] == selectedCourseId.value);
 
-  // ── Load enrolled courses ──────────────────────────────────────────────────
+  // ── Actions ────────────────────────────────────────────────────────────────
+
   Future<void> loadEnrolledCourses() async {
     isLoadingCourses.value = true;
     try {
-      final email = (await _store.currentEmail())?.trim();
+      final email = await _courseRepo.currentEmail();
       if (email == null || email.isEmpty) {
         enrolledCourses.clear();
         return;
       }
-      final mapped = await _store.studentCourses(email);
+      final mapped = await _courseRepo.studentCourses(email);
       enrolledCourses.assignAll(mapped);
+    } catch (e) {
+      Get.snackbar('Error', 'No se pudieron cargar tus cursos: $e',
+          snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoadingCourses.value = false;
     }
   }
 
-  // ── Join course ────────────────────────────────────────────────────────────
   Future<void> joinCourse(String code) async {
-    final email = (await _store.currentEmail())?.trim();
+    final email = await _courseRepo.currentEmail();
     if (email == null || email.isEmpty) {
       Get.snackbar('Error', 'No se pudo obtener tu correo de sesión');
       return;
     }
-    final alreadyIn = enrolledCourses.any((c) =>
-        (c['code'] ?? '').toString().toLowerCase() == code.toLowerCase());
+
+    final alreadyIn = enrolledCourses.any(
+      (c) => (c['code'] ?? '').toString().toLowerCase() == code.toLowerCase(),
+    );
     if (alreadyIn) {
       Get.snackbar('Ya inscrito', 'Ya perteneces a un curso con ese código.',
           snackPosition: SnackPosition.BOTTOM);
       return;
     }
-    final found =
-        await _store.enrollByCourseCode(email: email, courseCode: code);
-    if (!found) {
-      Get.snackbar('No encontrado', 'No existe un curso con código $code.',
+
+    try {
+      final found = await _courseRepo.enrollByCourseCode(
+        email: email,
+        courseCode: code,
+      );
+      if (!found) {
+        Get.snackbar('No encontrado', 'No existe un curso con código $code.',
+            snackPosition: SnackPosition.BOTTOM);
+        return;
+      }
+      await loadEnrolledCourses();
+      Get.snackbar('¡Inscripción exitosa!',
+          'Te has unido al curso con código $code.',
           snackPosition: SnackPosition.BOTTOM);
-      return;
+    } catch (e) {
+      Get.snackbar('Error', 'No se pudo inscribir: $e',
+          snackPosition: SnackPosition.BOTTOM);
     }
-    await loadEnrolledCourses();
-    Get.snackbar('¡Inscripción exitosa!',
-        'Te has unido al curso con código $code.',
-        snackPosition: SnackPosition.BOTTOM);
   }
 
   void logout() => Get.offAllNamed('/login');

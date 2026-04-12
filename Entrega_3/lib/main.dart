@@ -49,8 +49,7 @@ class MyApp extends StatelessWidget {
         GetPage(
           name: '/professor/course-groups',
           page: () {
-            final args =
-                Get.arguments as Map<String, dynamic>? ?? {};
+            final args = Get.arguments as Map<String, dynamic>? ?? {};
             return CourseGroupsPage(
               courseId: args['courseId']?.toString() ?? '',
               courseTitle: args['courseTitle']?.toString() ?? 'Course',
@@ -79,8 +78,7 @@ class MyApp extends StatelessWidget {
         GetPage(
           name: '/student/classmates',
           page: () {
-            final args =
-                Get.arguments as Map<String, dynamic>? ?? {};
+            final args = Get.arguments as Map<String, dynamic>? ?? {};
             return StudentCourseClassmatesPage(
               courseId: args['courseId']?.toString() ?? '',
               courseTitle: args['courseTitle']?.toString() ?? 'Course',

@@ -1,11 +1,12 @@
 import 'package:get/get.dart';
-import '../data/demo_course_store.dart';
+import '../../domain/repositories/i_evaluation_repository.dart';
+import '../../domain/repositories/i_course_repository.dart';
 
 class EvaluationController extends GetxController {
-  final DemoCourseStore _store;
+  final IEvaluationRepository _evalRepo;
+  final ICourseRepository _courseRepo;
 
-  EvaluationController({DemoCourseStore? store})
-      : _store = store ?? DemoCourseStore();
+  EvaluationController(this._evalRepo, this._courseRepo);
 
   // ── Professor state ────────────────────────────────────────────────────────
   final courseEvaluations = <Map<String, dynamic>>[].obs;
@@ -23,8 +24,13 @@ class EvaluationController extends GetxController {
   // ── Professor methods ──────────────────────────────────────────────────────
 
   Future<void> loadCourseEvaluations(String courseId) async {
-    final evals = await _store.getEvaluationsForCourse(courseId);
-    courseEvaluations.assignAll(evals);
+    try {
+      final evals = await _evalRepo.getEvaluationsForCourse(courseId);
+      courseEvaluations.assignAll(evals);
+    } catch (e) {
+      Get.snackbar('Error', 'No se pudieron cargar las evaluaciones: $e',
+          snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   Future<void> createEvaluation({
@@ -41,7 +47,7 @@ class EvaluationController extends GetxController {
   }) async {
     isCreating.value = true;
     try {
-      await _store.createEvaluation(
+      await _evalRepo.createEvaluation(
         courseId: courseId,
         courseName: courseName,
         categoryName: categoryName,
@@ -69,15 +75,22 @@ class EvaluationController extends GetxController {
   Future<void> loadEvaluationResults(String evaluationId) async {
     isLoadingResults.value = true;
     try {
-      final results = await _store.getEvaluationResults(evaluationId);
+      final results = await _evalRepo.getEvaluationResults(evaluationId);
       evaluationResults.value = results;
+    } catch (e) {
+      Get.snackbar('Error', 'No se pudieron cargar los resultados: $e',
+          snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoadingResults.value = false;
     }
   }
 
   Future<List<String>> getCategoriesForCourse(String courseId) async {
-    return await _store.getCategoriesForCourse(courseId);
+    try {
+      return await _courseRepo.getCategoriesForCourse(courseId);
+    } catch (_) {
+      return [];
+    }
   }
 
   // ── Student methods ────────────────────────────────────────────────────────
@@ -85,8 +98,11 @@ class EvaluationController extends GetxController {
   Future<void> loadActiveEvaluations(String email) async {
     isLoadingEvals.value = true;
     try {
-      final evals = await _store.getActiveEvaluationsForStudent(email);
+      final evals = await _evalRepo.getActiveEvaluationsForStudent(email);
       activeEvaluations.assignAll(evals);
+    } catch (e) {
+      Get.snackbar('Error', 'No se pudieron cargar las evaluaciones: $e',
+          snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoadingEvals.value = false;
     }
@@ -96,11 +112,16 @@ class EvaluationController extends GetxController {
     required String evaluationId,
     required String evaluatorEmail,
   }) async {
-    final teammates = await _store.getTeammatesForEvaluation(
-      evaluationId: evaluationId,
-      evaluatorEmail: evaluatorEmail,
-    );
-    currentTeammates.assignAll(teammates);
+    try {
+      final teammates = await _evalRepo.getTeammatesForEvaluation(
+        evaluationId: evaluationId,
+        evaluatorEmail: evaluatorEmail,
+      );
+      currentTeammates.assignAll(teammates);
+    } catch (e) {
+      Get.snackbar('Error', 'No se pudieron cargar los compañeros: $e',
+          snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   Future<bool> submitResponse({
@@ -111,18 +132,16 @@ class EvaluationController extends GetxController {
   }) async {
     isSubmitting.value = true;
     try {
-      await _store.submitEvaluationResponse(
+      await _evalRepo.submitEvaluationResponse(
         evaluationId: evaluationId,
         evaluatorEmail: evaluatorEmail,
         evaluateeEmail: evaluateeEmail,
         scores: scores,
       );
-      // Refresh teammates list
       await loadTeammatesForEvaluation(
         evaluationId: evaluationId,
         evaluatorEmail: evaluatorEmail,
       );
-      // Refresh active evaluations
       await loadActiveEvaluations(evaluatorEmail);
       return true;
     } catch (e) {
@@ -134,7 +153,12 @@ class EvaluationController extends GetxController {
   }
 
   Future<void> loadMyResults(String email) async {
-    final results = await _store.getStudentResults(email);
-    myResults.assignAll(results);
+    try {
+      final results = await _evalRepo.getStudentResults(email);
+      myResults.assignAll(results);
+    } catch (e) {
+      Get.snackbar('Error', 'No se pudieron cargar tus resultados: $e',
+          snackPosition: SnackPosition.BOTTOM);
+    }
   }
 }

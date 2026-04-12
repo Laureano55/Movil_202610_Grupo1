@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../viewmodels/evaluation_controller.dart';
-import '../../data/demo_course_store.dart';
+import '../../../core/auth_utils.dart';
 
 class ActiveEvaluationsPage extends StatefulWidget {
   const ActiveEvaluationsPage({super.key});
@@ -22,7 +22,7 @@ class _ActiveEvaluationsPageState extends State<ActiveEvaluationsPage> {
   }
 
   Future<void> _load() async {
-    final email = await DemoCourseStore().currentEmail();
+    final email = await getCurrentEmail();
     if (email != null) {
       await _evalCtrl.loadActiveEvaluations(email);
     }
@@ -175,7 +175,7 @@ class _EvalCard extends StatelessWidget {
         total == 0 ? 1.0 : (total - pending).toDouble() / total;
 
     final endDate =
-        DateTime.tryParse((eval['endDate'] ?? '').toString());
+        DateTime.tryParse((eval['endDate'] ?? eval['end_date'] ?? '').toString());
     final remainingHours = endDate != null
         ? endDate.difference(DateTime.now()).inHours
         : 0;
@@ -210,7 +210,7 @@ class _EvalCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        eval['activityName'].toString(),
+                        (eval['activityName'] ?? eval['activity_name'] ?? '').toString(),
                         style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 16,
@@ -264,7 +264,7 @@ class _EvalCard extends StatelessWidget {
                         size: 14, color: Color(0xFF6B7280)),
                     const SizedBox(width: 4),
                     Text(
-                      eval['myGroup'].toString(),
+                      (eval['myGroup'] ?? '').toString(),
                       style: const TextStyle(
                           color: Color(0xFF6B7280), fontSize: 13),
                     ),
@@ -273,14 +273,13 @@ class _EvalCard extends StatelessWidget {
                         size: 14, color: Color(0xFF6B7280)),
                     const SizedBox(width: 4),
                     Text(
-                      eval['courseName'].toString(),
+                      (eval['courseName'] ?? eval['course_name'] ?? '').toString(),
                       style: const TextStyle(
                           color: Color(0xFF6B7280), fontSize: 13),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Progress
                 Row(
                   children: [
                     Expanded(
@@ -314,8 +313,7 @@ class _EvalCard extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: onTap,
-                      icon: const Icon(Icons.rate_review_rounded,
-                          size: 16),
+                      icon: const Icon(Icons.rate_review_rounded, size: 16),
                       label: Text(pending == total
                           ? 'Comenzar evaluación'
                           : 'Continuar evaluación ($pending pendientes)'),

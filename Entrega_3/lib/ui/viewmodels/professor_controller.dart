@@ -1,13 +1,12 @@
 import 'package:get/get.dart';
-import '../data/demo_course_store.dart';
+import '../../domain/repositories/i_course_repository.dart';
 
 class ProfessorController extends GetxController {
-  final DemoCourseStore _store;
+  final ICourseRepository _courseRepo;
 
-  ProfessorController({DemoCourseStore? demoCourseStore})
-      : _store = demoCourseStore ?? DemoCourseStore();
+  ProfessorController(this._courseRepo);
 
-  // ── Course state ──────────────────────────────────────────────────────────
+  // ── State ──────────────────────────────────────────────────────────────────
   final courses = <Map<String, dynamic>>[].obs;
   final isLoadingCourses = false.obs;
 
@@ -17,33 +16,37 @@ class ProfessorController extends GetxController {
     await loadCourses();
   }
 
-  // ── Computed stats (reactive via courses Rx) ───────────────────────────────
+  // ── Computed stats ─────────────────────────────────────────────────────────
   int get totalStudents =>
       courses.fold(0, (sum, c) => sum + ((c['studentCount'] as int?) ?? 0));
-
   int get totalPendingEvals =>
       courses.fold(0, (sum, c) => sum + ((c['pendingEvals'] as int?) ?? 0));
-
   int get totalGroups =>
       courses.fold(0, (sum, c) => sum + ((c['groupCount'] as int?) ?? 0));
 
-  // ── Selected course ───────────────────────────────────────────────────────
+  // ── Selected course ────────────────────────────────────────────────────────
   final selectedCourseId = RxnString();
-
   void selectCourse(String id) => selectedCourseId.value = id;
+  Map<String, dynamic>? get selectedCourse =>
+      selectedCourseId.value == null
+          ? null
+          : courses.firstWhereOrNull((c) => c['id'] == selectedCourseId.value);
 
-  Map<String, dynamic>? get selectedCourse {
-    if (selectedCourseId.value == null) return null;
-    return courses.firstWhereOrNull((c) => c['id'] == selectedCourseId.value);
-  }
-
-  // ── Actions ───────────────────────────────────────────────────────────────
+  // ── Actions ────────────────────────────────────────────────────────────────
 
   Future<void> loadCourses() async {
     isLoadingCourses.value = true;
     try {
-      final mapped = await _store.professorCourseSummaries();
+      final email = await _courseRepo.currentEmail();
+      if (email == null || email.isEmpty) {
+        courses.clear();
+        return;
+      }
+      final mapped = await _courseRepo.professorCourseSummaries(email);
       courses.assignAll(mapped);
+    } catch (e) {
+      Get.snackbar('Error', 'No se pudieron cargar los cursos: $e',
+          snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoadingCourses.value = false;
     }
@@ -51,8 +54,8 @@ class ProfessorController extends GetxController {
 
   Future<void> createCourse(String title, String code) async {
     try {
-      await _store.createCourse(title: title, code: code);
-      await loadCourses(); // reload so stats update
+      await _courseRepo.createCourse(title: title, code: code);
+      await loadCourses();
       Get.snackbar(
         'Curso creado',
         '"$title" ha sido creado exitosamente.',
@@ -66,13 +69,17 @@ class ProfessorController extends GetxController {
   Future<void> deleteCourse(String id) async {
     final course = courses.firstWhereOrNull((c) => c['id'] == id);
     if (course == null) return;
-    await _store.deleteCourse(id);
-    await loadCourses();
-    Get.snackbar(
-      'Curso eliminado',
-      '"${course['title']}" ha sido eliminado.',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    try {
+      await _courseRepo.deleteCourse(id);
+      await loadCourses();
+      Get.snackbar(
+        'Curso eliminado',
+        '"${course['title']}" ha sido eliminado.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   void logout() => Get.offAllNamed('/login');
