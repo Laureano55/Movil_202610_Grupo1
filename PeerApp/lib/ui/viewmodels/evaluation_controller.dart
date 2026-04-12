@@ -33,6 +33,7 @@ class EvaluationController extends GetxController {
     }
   }
 
+  /// Creates a single evaluation and shows a snackbar.
   Future<void> createEvaluation({
     required String courseId,
     required String courseName,
@@ -70,6 +71,50 @@ class EvaluationController extends GetxController {
     } finally {
       isCreating.value = false;
     }
+  }
+
+  /// Creates evaluations for multiple categories without showing individual
+  /// snackbars. Returns a record of (created count, failed count).
+  Future<(int, int)> createEvaluationsForCategories({
+    required String courseId,
+    required String courseName,
+    required List<String> categoryNames,
+    required String activityName,
+    required DateTime startDate,
+    required DateTime endDate,
+    required String visibility,
+    required bool allowSelfEval,
+    required List<String> criteria,
+    required String professorEmail,
+  }) async {
+    isCreating.value = true;
+    int created = 0;
+    int failed = 0;
+    try {
+      for (final cat in categoryNames) {
+        try {
+          await _evalRepo.createEvaluation(
+            courseId: courseId,
+            courseName: courseName,
+            categoryName: cat,
+            activityName: activityName,
+            startDate: startDate,
+            endDate: endDate,
+            visibility: visibility,
+            allowSelfEval: allowSelfEval,
+            criteria: criteria,
+            professorEmail: professorEmail,
+          );
+          created++;
+        } catch (_) {
+          failed++;
+        }
+      }
+      await loadCourseEvaluations(courseId);
+    } finally {
+      isCreating.value = false;
+    }
+    return (created, failed);
   }
 
   Future<void> loadEvaluationResults(String evaluationId) async {

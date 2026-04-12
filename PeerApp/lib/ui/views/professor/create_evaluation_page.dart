@@ -23,12 +23,17 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
   late String _courseName;
   late String _courseCode;
 
+  // ── Group selection ────────────────────────────────────────────────────────
+  /// When true, the evaluation is created for ALL groups (default behaviour).
+  bool _allGroups = true;
   String? _selectedCategory;
   List<String> _categories = [];
 
+  // ── Dates ──────────────────────────────────────────────────────────────────
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(days: 3));
 
+  // ── Options ────────────────────────────────────────────────────────────────
   String _visibility = 'private';
   bool _allowSelfEval = false;
 
@@ -65,10 +70,11 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
     super.dispose();
   }
 
+  // ── Date picker ────────────────────────────────────────────────────────────
+
   Future<void> _pickDate(bool isStart) async {
     final now = DateTime.now();
-    final picked = await showDateTimePicker(
-      context: context,
+    final picked = await _showDateTimePicker(
       initialDate: isStart ? _startDate : _endDate,
       firstDate: now.subtract(const Duration(days: 1)),
       lastDate: now.add(const Duration(days: 365)),
@@ -87,8 +93,7 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
     }
   }
 
-  Future<DateTime?> showDateTimePicker({
-    required BuildContext context,
+  Future<DateTime?> _showDateTimePicker({
     required DateTime initialDate,
     required DateTime firstDate,
     required DateTime lastDate,
@@ -116,32 +121,40 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
         '${dt.minute.toString().padLeft(2, '0')}';
   }
 
+  // ── Submit ─────────────────────────────────────────────────────────────────
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedCategory == null) {
-      Get.snackbar('Error', 'Selecciona un grupo/categoría');
+    if (!_allGroups && _selectedCategory == null) {
+      Get.snackbar('Error', 'Selecciona un grupo/categoría',
+          snackPosition: SnackPosition.BOTTOM);
       return;
     }
     if (_selectedCriteria.isEmpty) {
-      Get.snackbar('Error', 'Selecciona al menos un criterio');
+      Get.snackbar('Error', 'Selecciona al menos un criterio',
+          snackPosition: SnackPosition.BOTTOM);
       return;
     }
     if (_endDate.isBefore(_startDate)) {
-      Get.snackbar('Error', 'La fecha de fin debe ser posterior al inicio');
+      Get.snackbar('Error', 'La fecha de fin debe ser posterior al inicio',
+          snackPosition: SnackPosition.BOTTOM);
       return;
     }
 
     setState(() => _loading = true);
     try {
-      // Usar getCurrentEmail() de auth_utils en lugar de DemoCourseStore
       final auth = Get.find<AuthController>();
-      final professorEmail = (await getCurrentEmail()) ??
-          auth.emailController.text.trim();
+      final professorEmail =
+          (await getCurrentEmail()) ?? auth.emailController.text.trim();
 
-      await Get.find<EvaluationController>().createEvaluation(
+      final categoriesToCreate =
+          _allGroups ? _categories : [_selectedCategory!];
+
+      final (created, failed) =
+          await Get.find<EvaluationController>().createEvaluationsForCategories(
         courseId: _courseId,
         courseName: _courseName,
-        categoryName: _selectedCategory!,
+        categoryNames: categoriesToCreate,
         activityName: _activityNameCtrl.text.trim(),
         startDate: _startDate,
         endDate: _endDate,
@@ -154,14 +167,129 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
       if (Get.isRegistered<ProfessorController>()) {
         Get.find<ProfessorController>().loadCourses();
       }
+
+      // Show result dialog before closing the page.
+      if (mounted) {
+        await _showResultDialog(
+          created: created,
+          failed: failed,
+          activityName: _activityNameCtrl.text.trim(),
+          totalCategories: categoriesToCreate.length,
+        );
+      }
+
       Get.back();
+    } catch (e) {
+      if (mounted) {
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.error_outline_rounded, color: Colors.red),
+                SizedBox(width: 10),
+                Text('Error al crear'),
+              ],
+            ),
+            content: Text(e.toString()),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cerrar'),
+              ),
+            ],
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
+  Future<void> _showResultDialog({
+    required int created,
+    required int failed,
+    required String activityName,
+    required int totalCategories,
+  }) async {
+    final bool allOk = failed == 0;
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(
+              allOk
+                  ? Icons.check_circle_rounded
+                  : Icons.warning_amber_rounded,
+              color: allOk ? Colors.green : Colors.orange,
+              size: 28,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                allOk ? '¡Evaluación activada!' : 'Creación parcial',
+                style: const TextStyle(fontSize: 17),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '"$activityName"',
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+            ),
+            const SizedBox(height: 10),
+            if (created > 0)
+              _ResultRow(
+                icon: Icons.check_rounded,
+                color: Colors.green,
+                text: '$created grupo${created > 1 ? 's' : ''} con evaluación creada.',
+              ),
+            if (failed > 0)
+              _ResultRow(
+                icon: Icons.close_rounded,
+                color: Colors.red,
+                text: '$failed grupo${failed > 1 ? 's' : ''} con error al crear.',
+              ),
+            const SizedBox(height: 8),
+            Text(
+              allOk
+                  ? 'Los estudiantes ya pueden responder dentro del periodo indicado.'
+                  : 'Revisa la consola o inténtalo de nuevo para los grupos fallidos.',
+              style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Aceptar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Build ──────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
+    final bool canSubmit = !_loading &&
+        _categories.isNotEmpty &&
+        (_allGroups || _selectedCategory != null);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FB),
       appBar: AppBar(
@@ -175,6 +303,7 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            // Course banner
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -184,8 +313,7 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.school_rounded,
-                      color: _primary, size: 20),
+                  const Icon(Icons.school_rounded, color: _primary, size: 20),
                   const SizedBox(width: 10),
                   Text(
                     '$_courseName  ·  $_courseCode',
@@ -197,7 +325,8 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
             ),
             const SizedBox(height: 20),
 
-            _SectionHeader(step: '1', title: 'Información básica'),
+            // ── Section 1: Basic info ──────────────────────────────────────
+            const _SectionHeader(step: '1', title: 'Información básica'),
             const SizedBox(height: 12),
             TextFormField(
               controller: _activityNameCtrl,
@@ -208,51 +337,79 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
                 filled: true,
                 fillColor: Colors.white,
               ),
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? 'Ingresa un nombre'
-                  : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Ingresa un nombre' : null,
             ),
             const SizedBox(height: 16),
-            _categories.isEmpty
-                ? Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(10),
-                        border:
-                            Border.all(color: Colors.orange.shade200)),
-                    child: Row(
-                      children: [
-                        Icon(Icons.warning_amber_rounded,
-                            color: Colors.orange.shade700),
-                        const SizedBox(width: 10),
-                        const Expanded(
-                          child: Text(
-                            'No hay grupos en este curso. Importa grupos antes de crear una evaluación.',
-                            style: TextStyle(fontSize: 13),
-                          ),
-                        ),
-                      ],
+
+            // ── Group selector ─────────────────────────────────────────────
+            if (_categories.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded,
+                        color: Colors.orange.shade700),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'No hay grupos en este curso. Importa grupos antes de crear una evaluación.',
+                        style: TextStyle(fontSize: 13),
+                      ),
                     ),
-                  )
-                : DropdownButtonFormField<String>(
-                    value: _selectedCategory,
-                    decoration: const InputDecoration(
-                      labelText: 'Grupo / Categoría',
-                      border: OutlineInputBorder(),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    items: _categories
-                        .map((cat) => DropdownMenuItem(
-                            value: cat, child: Text(cat)))
-                        .toList(),
-                    onChanged: (v) =>
-                        setState(() => _selectedCategory = v),
+                  ],
+                ),
+              )
+            else ...[
+              // All groups toggle
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: SwitchListTile(
+                  title: const Text('Todos los grupos',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text(
+                    _allGroups
+                        ? 'Se creará una evaluación para cada grupo (${_categories.length} grupos)'
+                        : 'Selecciona un grupo específico abajo',
+                    style: const TextStyle(fontSize: 12),
                   ),
+                  value: _allGroups,
+                  onChanged: (v) => setState(() => _allGroups = v),
+                  activeColor: _primary,
+                ),
+              ),
+              // Specific group dropdown (only visible when not all-groups)
+              if (!_allGroups) ...[
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  decoration: const InputDecoration(
+                    labelText: 'Grupo / Categoría',
+                    border: OutlineInputBorder(),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                  items: _categories
+                      .map((cat) =>
+                          DropdownMenuItem(value: cat, child: Text(cat)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedCategory = v),
+                ),
+              ],
+            ],
             const SizedBox(height: 24),
 
-            _SectionHeader(step: '2', title: 'Ventana de tiempo'),
+            // ── Section 2: Time window ─────────────────────────────────────
+            const _SectionHeader(step: '2', title: 'Ventana de tiempo'),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -277,7 +434,9 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
             ),
             const SizedBox(height: 24),
 
-            _SectionHeader(step: '3', title: 'Visibilidad de resultados'),
+            // ── Section 3: Visibility ──────────────────────────────────────
+            const _SectionHeader(
+                step: '3', title: 'Visibilidad de resultados'),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -287,8 +446,7 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
                     label: 'Privado',
                     subtitle: 'Solo el docente ve los resultados',
                     selected: _visibility == 'private',
-                    onTap: () =>
-                        setState(() => _visibility = 'private'),
+                    onTap: () => setState(() => _visibility = 'private'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -298,15 +456,15 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
                     label: 'Público',
                     subtitle: 'Estudiantes ven sus resultados',
                     selected: _visibility == 'public',
-                    onTap: () =>
-                        setState(() => _visibility = 'public'),
+                    onTap: () => setState(() => _visibility = 'public'),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
 
-            _SectionHeader(step: '4', title: 'Reglas de evaluación'),
+            // ── Section 4: Rules ───────────────────────────────────────────
+            const _SectionHeader(step: '4', title: 'Reglas de evaluación'),
             const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
@@ -317,8 +475,8 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
               child: SwitchListTile(
                 title: const Text('Permitir autoevaluación',
                     style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle:
-                    const Text('Los estudiantes pueden evaluarse a sí mismos'),
+                subtitle: const Text(
+                    'Los estudiantes pueden evaluarse a sí mismos'),
                 value: _allowSelfEval,
                 onChanged: (v) => setState(() => _allowSelfEval = v),
                 activeColor: _primary,
@@ -326,7 +484,9 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
             ),
             const SizedBox(height: 24),
 
-            _SectionHeader(step: '5', title: 'Criterios de evaluación'),
+            // ── Section 5: Criteria ────────────────────────────────────────
+            const _SectionHeader(
+                step: '5', title: 'Criterios de evaluación'),
             const SizedBox(height: 12),
             ...kAllCriteria.map((criterion) => Container(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -339,9 +499,8 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
                       color: _selectedCriteria.contains(criterion)
                           ? _primary
                           : const Color(0xFFE5E7EB),
-                      width: _selectedCriteria.contains(criterion)
-                          ? 1.5
-                          : 1,
+                      width:
+                          _selectedCriteria.contains(criterion) ? 1.5 : 1,
                     ),
                   ),
                   child: CheckboxListTile(
@@ -356,10 +515,8 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
                       });
                     },
                     title: Text(criterion,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600)),
-                    subtitle: Text(
-                        kCriteriaDescriptions[criterion] ?? '',
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(kCriteriaDescriptions[criterion] ?? '',
                         style: const TextStyle(fontSize: 12)),
                     activeColor: _primary,
                     dense: true,
@@ -367,11 +524,11 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
                 )),
             const SizedBox(height: 32),
 
+            // ── Submit button ──────────────────────────────────────────────
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed:
-                    _loading || _categories.isEmpty ? null : _submit,
+                onPressed: canSubmit ? _submit : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _primary,
                   foregroundColor: Colors.white,
@@ -385,15 +542,41 @@ class _CreateEvaluationPageState extends State<CreateEvaluationPage> {
                         height: 20,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
-                    : const Text('Activar Evaluación',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700)),
+                    : Text(
+                        _allGroups && _categories.isNotEmpty
+                            ? 'Activar evaluación para ${_categories.length} grupo${_categories.length > 1 ? 's' : ''}'
+                            : 'Activar Evaluación',
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w700)),
               ),
             ),
             const SizedBox(height: 16),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Helper widgets ─────────────────────────────────────────────────────────────
+
+class _ResultRow extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String text;
+  const _ResultRow({required this.icon, required this.color, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+              child: Text(text, style: const TextStyle(fontSize: 13))),
+        ],
       ),
     );
   }
@@ -507,8 +690,7 @@ class _VisibilityOption extends StatelessWidget {
             Row(
               children: [
                 Icon(icon,
-                    color:
-                        selected ? _primary : const Color(0xFF6B7280),
+                    color: selected ? _primary : const Color(0xFF6B7280),
                     size: 20),
                 const Spacer(),
                 if (selected)

@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../viewmodels/student_controller.dart';
+import '../../viewmodels/evaluation_controller.dart';
+import '../../../core/auth_utils.dart';
 import 'student_course_classmates_page.dart';
 
 class _LightBouncePhysics extends BouncingScrollPhysics {
@@ -28,11 +30,38 @@ class _LightBouncePhysics extends BouncingScrollPhysics {
   }
 }
 
-class StudentHomePage extends GetView<StudentController> {
+class StudentHomePage extends StatefulWidget {
   const StudentHomePage({super.key});
+
+  @override
+  State<StudentHomePage> createState() => _StudentHomePageState();
+}
+
+class _StudentHomePageState extends State<StudentHomePage> {
+  final StudentController controller = Get.find<StudentController>();
+  final EvaluationController _evalCtrl = Get.find<EvaluationController>();
 
   static const _primary = Color(0xFF4B3CF0);
   static const _accent = Color(0xFF3ECFCF);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEvaluations();
+  }
+
+  Future<void> _loadEvaluations() async {
+    final email = await getCurrentEmail();
+    if (email != null) {
+      await _evalCtrl.loadActiveEvaluations(email);
+    }
+  }
+
+  /// Refreshes both enrolled courses and active evaluations.
+  Future<void> _refreshAll() async {
+    await controller.loadEnrolledCourses();
+    await _loadEvaluations();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +89,11 @@ class StudentHomePage extends GetView<StudentController> {
         ],
       ),
       body: Obx(() {
+        // Access both reactive lists so this Obx re-renders when either changes.
+        final pendingEvalCount = _evalCtrl.activeEvaluations
+            .where((e) => e['completed'] == false)
+            .length;
+
         if (controller.isLoadingCourses.value) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -117,10 +151,9 @@ class StudentHomePage extends GetView<StudentController> {
                         Row(
                           children: [
                             _MiniStat(
-                                label: 'Eval. activas',
-                                value:
-                                    '${controller.totalActiveEvals}',
-                                color: controller.totalActiveEvals > 0
+                                label: 'Eval. pendientes',
+                                value: '$pendingEvalCount',
+                                color: pendingEvalCount > 0
                                     ? Colors.orange.shade300
                                     : Colors.white60),
                             const SizedBox(width: 20),
@@ -141,17 +174,17 @@ class StudentHomePage extends GetView<StudentController> {
             // ── Scrollable content ────────────────────────────────────────
             Expanded(
               child: RefreshIndicator(
-                onRefresh: controller.loadEnrolledCourses,
+                onRefresh: _refreshAll,
                 child: ListView(
                   physics: const _LightBouncePhysics(),
                   padding: EdgeInsets.zero,
                   children: [
                     // Urgent alert
-                    if (controller.totalActiveEvals > 0)
+                    if (pendingEvalCount > 0)
                       GestureDetector(
                         onTap: () => Get.toNamed(
-                            '/student/active-evaluations')?.then(
-                            (_) => controller.loadEnrolledCourses()),
+                                '/student/active-evaluations')
+                            ?.then((_) => _refreshAll()),
                         child: Container(
                           margin:
                               const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -169,10 +202,10 @@ class StudentHomePage extends GetView<StudentController> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  'Tienes ${controller.totalActiveEvals} evaluación'
-                                  '${controller.totalActiveEvals > 1 ? 'es' : ''}'
+                                  'Tienes $pendingEvalCount evaluación'
+                                  '${pendingEvalCount > 1 ? 'es' : ''}'
                                   ' pendiente'
-                                  '${controller.totalActiveEvals > 1 ? 's' : ''}.'
+                                  '${pendingEvalCount > 1 ? 's' : ''}.'
                                   ' ¡Toca para responder!',
                                   style: TextStyle(
                                       color: Colors.orange.shade800,
@@ -229,12 +262,10 @@ class StudentHomePage extends GetView<StudentController> {
                                         course['title'] as String,
                                     courseCode: course['code'] as String,
                                   ),
-                                )?.then((_) =>
-                                    controller.loadEnrolledCourses()),
+                                )?.then((_) => _refreshAll()),
                                 onEvaluate: () => Get.toNamed(
                                       '/student/active-evaluations',
-                                    )?.then((_) =>
-                                        controller.loadEnrolledCourses()),
+                                    )?.then((_) => _refreshAll()),
                               )),
 
                     // Quick actions
@@ -250,27 +281,29 @@ class StudentHomePage extends GetView<StudentController> {
                     Padding(
                       padding:
                           const EdgeInsets.symmetric(horizontal: 20),
-                      child: Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
+                      child: Row(
                         children: [
-                          _QuickCard(
-                            icon: Icons.rate_review_rounded,
-                            title: 'Evaluaciones activas',
-                            subtitle: 'Responde dentro del plazo',
-                            color: _primary,
-                            onTap: () => Get.toNamed(
-                                    '/student/active-evaluations')
-                                ?.then((_) =>
-                                    controller.loadEnrolledCourses()),
+                          Expanded(
+                            child: _QuickCard(
+                              icon: Icons.rate_review_rounded,
+                              title: 'Evaluaciones activas',
+                              subtitle: 'Responde dentro del plazo',
+                              color: _primary,
+                              onTap: () => Get.toNamed(
+                                      '/student/active-evaluations')
+                                  ?.then((_) => _refreshAll()),
+                            ),
                           ),
-                          _QuickCard(
-                            icon: Icons.insights_rounded,
-                            title: 'Mis resultados',
-                            subtitle: 'Ver mis calificaciones',
-                            color: _accent,
-                            onTap: () =>
-                                Get.toNamed('/student/my-results'),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _QuickCard(
+                              icon: Icons.insights_rounded,
+                              title: 'Mis resultados',
+                              subtitle: 'Ver mis calificaciones',
+                              color: _accent,
+                              onTap: () =>
+                                  Get.toNamed('/student/my-results'),
+                            ),
                           ),
                         ],
                       ),
@@ -326,7 +359,8 @@ class _MiniStat extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
-  const _MiniStat({required this.label, required this.value, required this.color});
+  const _MiniStat(
+      {required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -536,43 +570,40 @@ class _QuickCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: SizedBox(
-        width: (MediaQuery.of(context).size.width - 52) / 2,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2)),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 22),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2)),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(height: 10),
-              Text(title,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                      color: Color(0xFF1A1A2E))),
-              const SizedBox(height: 3),
-              Text(subtitle,
-                  style: const TextStyle(
-                      fontSize: 11, color: Color(0xFF6B7280))),
-            ],
-          ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(height: 10),
+            Text(title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: Color(0xFF1A1A2E))),
+            const SizedBox(height: 3),
+            Text(subtitle,
+                style: const TextStyle(
+                    fontSize: 11, color: Color(0xFF6B7280))),
+          ],
         ),
       ),
     );

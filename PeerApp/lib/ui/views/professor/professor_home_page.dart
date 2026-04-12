@@ -166,66 +166,43 @@ class ProfessorHomePage extends GetView<ProfessorController> {
                         ),
                       ),
                     ),
+                    // Two equal-width cards using Row + Expanded (same layout
+                    // as student home page).
                     Padding(
                       padding:
                           const EdgeInsets.symmetric(horizontal: 20),
-                      child: Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
+                      child: Row(
                         children: [
-                          _ActionCard(
-                            icon: Icons.group_add_rounded,
-                            title: 'Importar grupos',
-                            subtitle: 'Desde CSV / Brightspace',
-                            color: _accent,
-                            onTap: () =>
-                                Get.to(() => const ImportGroupsPage())
-                                    ?.then(
-                                        (_) => controller.loadCourses()),
+                          Expanded(
+                            child: _ActionCard(
+                              icon: Icons.group_add_rounded,
+                              title: 'Importar grupos',
+                              subtitle: 'Desde CSV / Brightspace',
+                              color: _accent,
+                              onTap: () =>
+                                  Get.to(() => const ImportGroupsPage())
+                                      ?.then((_) =>
+                                          controller.loadCourses()),
+                            ),
                           ),
-                          _ActionCard(
-                            icon: Icons.rate_review_rounded,
-                            title: 'Crear evaluación',
-                            subtitle: 'Nueva evaluación entre pares',
-                            color: const Color(0xFFFF6B6B),
-                            onTap: controller.courses.isEmpty
-                                ? () => Get.snackbar(
-                                      'Sin cursos',
-                                      'Crea al menos un curso primero.',
-                                      snackPosition:
-                                          SnackPosition.BOTTOM,
-                                    )
-                                : () => Get.toNamed(
-                                      '/professor/create-evaluation',
-                                      arguments: {
-                                        'courseId':
-                                            controller.courses.first[
-                                                'id'] as String,
-                                        'courseName':
-                                            controller.courses.first[
-                                                'title'] as String,
-                                        'courseCode':
-                                            controller.courses.first[
-                                                'code'] as String,
-                                      },
-                                    )?.then(
-                                        (_) => controller.loadCourses()),
-                          ),
-                          _ActionCard(
-                            icon: Icons.bar_chart_rounded,
-                            title: 'Ver estadísticas',
-                            subtitle: 'Resultados de evaluaciones',
-                            color: const Color(0xFFFFB347),
-                            onTap: controller.courses.isEmpty
-                                ? null
-                                : () => Get.toNamed(
-                                      '/professor/evaluation-results',
-                                      arguments: {
-                                        'courseId':
-                                            controller.courses.first[
-                                                'id'] as String,
-                                      },
-                                    ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _ActionCard(
+                              icon: Icons.bar_chart_rounded,
+                              title: 'Ver estadísticas',
+                              subtitle: 'Resultados de evaluaciones',
+                              color: const Color(0xFFFFB347),
+                              onTap: controller.courses.isEmpty
+                                  ? null
+                                  : () => Get.toNamed(
+                                        '/professor/evaluation-results',
+                                        arguments: {
+                                          'courseId':
+                                              controller.courses.first[
+                                                  'id'] as String,
+                                        },
+                                      ),
+                            ),
                           ),
                         ],
                       ),
@@ -585,44 +562,41 @@ class _ActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: SizedBox(
-        width: (MediaQuery.of(context).size.width - 52) / 2,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              const SizedBox(height: 10),
-              Text(title,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                      color: Color(0xFF1A1A2E))),
-              const SizedBox(height: 3),
-              Text(subtitle,
-                  style: const TextStyle(
-                      fontSize: 11, color: Color(0xFF6B7280))),
-            ],
-          ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(height: 10),
+            Text(title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: Color(0xFF1A1A2E))),
+            const SizedBox(height: 3),
+            Text(subtitle,
+                style: const TextStyle(
+                    fontSize: 11, color: Color(0xFF6B7280))),
+          ],
         ),
       ),
     );
