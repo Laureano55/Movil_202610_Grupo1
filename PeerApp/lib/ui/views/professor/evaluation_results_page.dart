@@ -890,7 +890,7 @@ class _ScoreDistribution extends StatelessWidget {
       } else if (avg < 4.5) {
         buckets[3]++;
       } else {
-        buckets[4]++;
+        buckets[4]++; 
       }
     }
     final labels = ['<2', '2–3', '3–4', '4–4.5', '≥4.5'];
@@ -1248,8 +1248,10 @@ class _CourseGeneralTab extends StatelessWidget {
     final evaluationAverages = courseEvaluations
         .map((e) => (e['averageEvaluation'] as double?) ?? (e['overall'] as double?) ?? 0.0)
         .toList(growable: false);
-    final overall = (courseEvaluations.first['averageCourse'] as double?) ??
-        _averageFrom(evaluationAverages);
+    final evaluatedAverages = evaluationAverages
+      .where((avg) => avg > 0)
+      .toList(growable: false);
+    final overall = _averageFrom(evaluatedAverages);
     final totalResponses = courseEvaluations.fold<int>(
       0,
       (sum, e) => sum + ((e['totalResponses'] as int?) ?? 0),
@@ -1275,7 +1277,7 @@ class _CourseGeneralTab extends StatelessWidget {
       criteriaAverages[criterion] = _averageFrom(vals);
     }
 
-    if (evaluationAverages.every((avg) => avg <= 0)) {
+    if (evaluatedAverages.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(32),
@@ -1323,29 +1325,6 @@ class _CourseGeneralTab extends StatelessWidget {
               Text('Calificación Promedio (sobre 5.0)',
                   style: const TextStyle(
                       color: Colors.white70, fontSize: 14)),
-              const SizedBox(height: 16),
-              Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Progreso',
-                          style: TextStyle(
-                              color: Colors.white70, fontSize: 12)),
-                      Text('${(overall / 5.0 * 100).round()}%',
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 12)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  LinearProgressIndicator(
-                    value: overall / 5.0,
-                    backgroundColor: Colors.white30,
-                    color: Colors.white,
-                    minHeight: 6,
-                  ),
-                ],
-              ),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(10),
@@ -1441,7 +1420,7 @@ class _CourseGeneralTab extends StatelessWidget {
         ],
 
         // Score distribution
-        if (evaluationAverages.isNotEmpty) ...[
+        if (evaluatedAverages.isNotEmpty) ...[
           const Text('Distribución de Promedios por Evaluación',
               style: TextStyle(
                   fontWeight: FontWeight.w700,
@@ -1449,7 +1428,7 @@ class _CourseGeneralTab extends StatelessWidget {
                   color: Color(0xFF1A1A2E))),
           const SizedBox(height: 12),
           _ScoreDistribution(
-            students: evaluationAverages
+            students: evaluatedAverages
                 .map((avg) => <String, dynamic>{'overallAverage': avg})
                 .toList(),
           ),
@@ -1472,12 +1451,12 @@ class _CourseGeneralTab extends StatelessWidget {
                       fontSize: 14,
                       color: Color(0xFF1A1A2E))),
               const SizedBox(height: 12),
-              _StatRow('Total de evaluaciones',
-                  evaluationAverages.length.toString()),
+                _StatRow('Evaluaciones con respuestas validas',
+                  evaluatedAverages.length.toString()),
               _StatRow('Promedio del curso',
                   '${overall.toStringAsFixed(2)}/5.0'),
               Builder(builder: (_) {
-                final scores = List<double>.from(evaluationAverages)..sort();
+                final scores = List<double>.from(evaluatedAverages)..sort();
                 final min = scores.isEmpty ? 0.0 : scores.first;
                 final max = scores.isEmpty ? 0.0 : scores.last;
                 return Column(
