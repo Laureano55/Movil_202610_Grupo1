@@ -10,6 +10,15 @@ class CourseRepositoryImpl implements ICourseRepository {
 
   CourseRepositoryImpl(this._db);
 
+  bool _isUpdatePermissionError(Object error) {
+    final msg = error.toString().toLowerCase();
+    return msg.contains('update') &&
+        (msg.contains('permission') ||
+            msg.contains('forbidden') ||
+            msg.contains('unauthorized') ||
+            msg.contains('not allowed'));
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   @override
@@ -240,12 +249,28 @@ class CourseRepositoryImpl implements ICourseRepository {
       await _db.insert('course_members', toInsert);
     }
     for (final upd in toUpdate) {
-      await _db.update(
-        'course_members',
-        idColumn: '_id',
-        idValue: upd['id'] as String,
-        updates: upd['data'] as Map<String, dynamic>,
-      );
+      final rowId = upd['id'] as String;
+      final rowData = upd['data'] as Map<String, dynamic>;
+
+      try {
+        await _db.update(
+          'course_members',
+          idColumn: '_id',
+          idValue: rowId,
+          updates: rowData,
+        );
+      } catch (e) {
+        // Some deployments deny UPDATE for professor tokens. In that case,
+        // replace the row via delete+insert to keep CSV sync functional.
+        if (!_isUpdatePermissionError(e)) rethrow;
+
+        await _db.delete(
+          'course_members',
+          idColumn: '_id',
+          idValue: rowId,
+        );
+        await _db.insert('course_members', [rowData]);
+      }
     }
   }
 

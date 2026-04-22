@@ -1,5 +1,16 @@
 # Movil_202610_Grupo1
 
+#PeerApp
+
+##Miembros Del Grupo:
+
+- ANAYA DIAZ, JHOREINIS
+- LAFAURIE DEL VILLAR, LAUREANO
+- MONTERROSA DURAN, EMMANUEL
+
+#Link:
+https://youtu.be/IdwZ5K3De1o
+
 ## Descripción de la aplicación
 
 Esta aplicación móvil web y multiplataforma está orientada a la gestión de cursos, grupos y evaluaciones académicas dentro de un entorno universitario. Su propósito es facilitar el seguimiento del desempeño de estudiantes y grupos, permitir la creación y respuesta de evaluaciones, y ofrecer a docentes y estudiantes una interfaz clara para consultar información relevante en tiempo real.

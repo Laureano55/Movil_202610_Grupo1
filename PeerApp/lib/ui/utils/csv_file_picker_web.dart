@@ -1,71 +1,95 @@
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:async';
-
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-
+import 'dart:html' as html;
+import 'dart:typed_data';
 import 'csv_file_picker.dart';
 
 Future<PickedCsvFile?> pickCsvFile() async {
-  // En web, usamos un workaround compatible con Flutter Web moderno
-  // usando un plugin de file_picker que ya maneja la compatibilidad
-  try {
-    // Intentar usar file_picker si está disponible en web
-    return await _pickWithFilePicker();
-  } catch (_) {
-    return null;
-  }
-}
-
-Future<PickedCsvFile?> _pickWithFilePicker() async {
-  // Flutter Web: usar js interop moderno via MethodChannel o dart:js_interop
-  // Como dart:html está deprecado, usamos file_picker que internamente
-  // maneja la compatibilidad web
-
-  // Este método es llamado solo en web, file_picker maneja la selección
-  // correctamente en Flutter Web moderno
   final completer = Completer<PickedCsvFile?>();
+  bool completed = false;
 
   try {
-    // Usar el canal de plataforma para web si file_picker está disponible
-    // file_picker ^10.x ya usa dart:js_interop internamente
-    const channel = MethodChannel('miguelruivo.flutter.plugins.filepicker');
-    
-    final result = await channel.invokeMethod<Map<dynamic, dynamic>>(
-      'pickFiles',
-      {
-        'type': 'custom',
-        'allowedExtensions': ['csv'],
-        'withData': true,
-        'allowMultiple': false,
-      },
+    // Crear input de archivo HTML
+    final input = html.FileUploadInputElement();
+    input.accept = '.csv';
+    input.multiple = false;
+
+    // Listener para cuando se selecciona un archivo
+    void handleChange(_) {
+      final files = input.files;
+      if (files == null || files.isEmpty) {
+        if (!completed) {
+          completed = true;
+          completer.complete(null);
+        }
+        return;
+      }
+
+      final file = files.first;
+      final reader = html.FileReader();
+
+      // Cuando termina de leer el archivo
+      reader.onLoadEnd.listen((_) {
+        if (completed) return;
+
+        try {
+          // Convertir ByteBuffer a Uint8List
+          final result = reader.result;
+          Uint8List bytes;
+
+          if (result is Uint8List) {
+            bytes = result;
+          } else if (result is ByteBuffer) {
+            bytes = result.asUint8List();
+          } else {
+            if (!completed) {
+              completed = true;
+              completer.complete(null);
+            }
+            return;
+          }
+
+          if (!completed) {
+            completed = true;
+            completer.complete(
+              PickedCsvFile(name: file.name, bytes: bytes),
+            );
+          }
+        } catch (e) {
+          if (!completed) {
+            completed = true;
+            completer.complete(null);
+          }
+        }
+      });
+
+      // Si ocurre error durante la lectura
+      reader.onError.listen((_) {
+        if (!completed) {
+          completed = true;
+          completer.complete(null);
+        }
+      });
+
+      // Iniciar lectura como array buffer
+      reader.readAsArrayBuffer(file);
+    }
+
+    input.onChange.listen(handleChange);
+
+    // Abrir diálogo de selección
+    input.click();
+
+    // Timeout de 2 minutos por si el usuario no responde
+    return completer.future.timeout(
+      const Duration(minutes: 2),
+      onTimeout: () => null,
     );
-
-    if (result == null) {
-      completer.complete(null);
-      return completer.future;
-    }
-
-    final files = result['files'] as List?;
-    if (files == null || files.isEmpty) {
-      completer.complete(null);
-      return completer.future;
-    }
-
-    final file = files.first as Map;
-    final name = file['name']?.toString() ?? 'file.csv';
-    final bytes = file['bytes'] as Uint8List?;
-
-    if (bytes == null) {
-      completer.complete(null);
-      return completer.future;
-    }
-
-    completer.complete(PickedCsvFile(name: name, bytes: bytes));
   } catch (e) {
-    debugPrint('Web file picker error: $e');
-    completer.complete(null);
+    if (!completed) {
+      completed = true;
+      completer.complete(null);
+    }
+    return completer.future;
   }
-
-  return completer.future;
 }
