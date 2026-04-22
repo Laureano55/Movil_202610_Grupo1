@@ -93,10 +93,8 @@ class _StudentHomePageState extends State<StudentHomePage> {
         final pendingEvalCount = _evalCtrl.activeEvaluations
             .where((e) => e['completed'] == false)
             .length;
+        final isLoadingCourses = controller.isLoadingCourses.value;
 
-        if (controller.isLoadingCourses.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
         return Column(
           children: [
             // ── Progress banner ───────────────────────────────────────────
@@ -170,6 +168,12 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 ],
               ),
             ),
+
+            if (isLoadingCourses)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: Center(child: CircularProgressIndicator()),
+              ),
 
             // ── Scrollable content ────────────────────────────────────────
             Expanded(
