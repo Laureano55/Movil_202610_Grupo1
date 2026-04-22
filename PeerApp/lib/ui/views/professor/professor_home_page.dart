@@ -195,13 +195,7 @@ class ProfessorHomePage extends GetView<ProfessorController> {
                               onTap: controller.courses.isEmpty
                                   ? null
                                   : () => Get.toNamed(
-                                        '/professor/evaluation-results',
-                                        arguments: {
-                                          'courseId':
-                                              controller.courses.first[
-                                                  'id'] as String,
-                                        },
-                                      ),
+                                        '/professor/evaluation-results'),
                             ),
                           ),
                         ],

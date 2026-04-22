@@ -1,4 +1,3 @@
-import '../../domain/models/course_model.dart';
 import '../../domain/models/course_member_model.dart';
 
 abstract class ICourseRepository {

@@ -3,6 +3,7 @@ import '../../core/roble_database_service.dart';
 import '../../domain/models/course_model.dart';
 import '../../domain/models/course_member_model.dart';
 import '../../domain/repositories/i_course_repository.dart';
+import 'repository_utils.dart';
 
 class CourseRepositoryImpl implements ICourseRepository {
   final RobleDatabaseService _db;
@@ -97,7 +98,7 @@ class CourseRepositoryImpl implements ICourseRepository {
       final activeEvals = allEvals
           .where((e) =>
               e['course_id'] == courseId &&
-              _computeStatus(e) == 'active')
+            computeEvaluationStatus(e) == 'active')
           .length;
 
       result.add({
@@ -174,7 +175,7 @@ class CourseRepositoryImpl implements ICourseRepository {
       final activeEvals = allEvals
           .where((e) =>
               e['course_id'] == courseId &&
-              _computeStatus(e) == 'active')
+            computeEvaluationStatus(e) == 'active')
           .length;
 
       result.add({
@@ -202,7 +203,7 @@ class CourseRepositoryImpl implements ICourseRepository {
     final byEmail = <String, Map<String, dynamic>>{};
 
     for (final m in existing.where((m) => m['course_id'] == courseId)) {
-      final e = (m['email'] ?? '').toString().toLowerCase();
+      final e = normalizeEmail(m['email']);
       if (e.isNotEmpty) byEmail[e] = Map<String, dynamic>.from(m);
     }
 
@@ -210,7 +211,7 @@ class CourseRepositoryImpl implements ICourseRepository {
     final toUpdate = <Map<String, dynamic>>[];
 
     for (final incoming in members) {
-      final email = (incoming['email'] ?? '').toString().toLowerCase().trim();
+      final email = normalizeEmail(incoming['email']);
       if (email.isEmpty) continue;
 
       final record = CourseMemberModel(
@@ -271,14 +272,11 @@ class CourseRepositoryImpl implements ICourseRepository {
       final seen = <String>{};
       final memberList = <Map<String, String>>[];
       for (final m in byCategory) {
-        final email = (m['email'] ?? '').toString().toLowerCase();
+        final email = normalizeEmail(m['email']);
         if (email.isEmpty || seen.contains(email)) continue;
         seen.add(email);
-        final n = (m['name'] ?? '').toString().trim();
-        final ln = (m['last_name'] ?? '').toString().trim();
-        final fullName = '$n $ln'.trim();
         memberList.add({
-          'name': fullName.isEmpty ? email : fullName,
+          'name': buildDisplayNameFromRow(m, fallbackEmail: email),
           'email': email,
         });
       }
@@ -297,7 +295,7 @@ class CourseRepositoryImpl implements ICourseRepository {
     required String courseId,
     required String email,
   }) async {
-    final normalizedEmail = email.toLowerCase().trim();
+    final normalizedEmail = normalizeEmail(email);
     final allMembers = await _db.read('course_members');
 
     final myRow = allMembers.firstWhere(
@@ -318,16 +316,13 @@ class CourseRepositoryImpl implements ICourseRepository {
     for (final m in allMembers) {
       if (m['course_id'] != courseId) continue;
       if ((m['category_name'] ?? '').toString().trim() != myGroup) continue;
-      final mEmail = (m['email'] ?? '').toString().toLowerCase();
+      final mEmail = normalizeEmail(m['email']);
       if (mEmail.isEmpty || mEmail == normalizedEmail || seen.contains(mEmail)) {
         continue;
       }
       seen.add(mEmail);
-      final n = (m['name'] ?? '').toString().trim();
-      final ln = (m['last_name'] ?? '').toString().trim();
-      final fullName = '$n $ln'.trim();
       classmates.add({
-        'name': fullName.isEmpty ? mEmail : fullName,
+        'name': buildDisplayNameFromRow(m, fallbackEmail: mEmail),
         'email': mEmail,
       });
     }
@@ -355,17 +350,5 @@ class CourseRepositoryImpl implements ICourseRepository {
         .where((m) => m['course_id'] == courseId)
         .map(CourseMemberModel.fromJson)
         .toList();
-  }
-
-  // ── Private helpers ────────────────────────────────────────────────────────
-
-  String _computeStatus(Map<String, dynamic> evalJson) {
-    final start = DateTime.tryParse(evalJson['start_date']?.toString() ?? '');
-    final end = DateTime.tryParse(evalJson['end_date']?.toString() ?? '');
-    if (start == null || end == null) return 'draft';
-    final now = DateTime.now();
-    if (now.isAfter(end)) return 'closed';
-    if (now.isAfter(start)) return 'active';
-    return 'draft';
   }
 }
