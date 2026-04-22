@@ -1,12 +1,18 @@
 import 'package:get/get.dart';
 import '../../domain/repositories/i_evaluation_repository.dart';
 import '../../domain/repositories/i_course_repository.dart';
+import '../data/json_backup_storage.dart';
 
 class EvaluationController extends GetxController {
   final IEvaluationRepository _evalRepo;
   final ICourseRepository _courseRepo;
 
   EvaluationController(this._evalRepo, this._courseRepo);
+
+  final JsonBackupStorage _backupStorage = JsonBackupStorage();
+  final Map<String, List<Map<String, dynamic>>> _courseEvaluationsCache = {};
+  final Map<String, Map<String, dynamic>> _evaluationResultsCache = {};
+  bool _cacheLoaded = false;
 
   // ── Professor state ────────────────────────────────────────────────────────
   final courseEvaluations = <Map<String, dynamic>>[].obs;
@@ -21,12 +27,72 @@ class EvaluationController extends GetxController {
   final isLoadingEvals = false.obs;
   final isSubmitting = false.obs;
 
+  Future<void> _ensureCacheLoaded() async {
+    if (_cacheLoaded) return;
+
+    final raw = await _backupStorage.read();
+    if (raw != null) {
+      final courseCache = raw['courseEvaluationsCache'];
+      if (courseCache is Map) {
+        for (final entry in courseCache.entries) {
+          final courseId = entry.key.toString();
+          final evaluations = entry.value;
+          if (evaluations is List) {
+            _courseEvaluationsCache[courseId] = evaluations
+                .whereType<Map>()
+                .map((e) => Map<String, dynamic>.from(e))
+                .toList();
+          }
+        }
+      }
+
+      final resultsCache = raw['evaluationResultsCache'];
+      if (resultsCache is Map) {
+        for (final entry in resultsCache.entries) {
+          final evaluationId = entry.key.toString();
+          final result = entry.value;
+          if (result is Map) {
+            _evaluationResultsCache[evaluationId] =
+                Map<String, dynamic>.from(result);
+          }
+        }
+      }
+    }
+
+    _cacheLoaded = true;
+  }
+
+  Future<void> _persistCache() async {
+    await _backupStorage.write({
+      'courseEvaluationsCache': _courseEvaluationsCache,
+      'evaluationResultsCache': _evaluationResultsCache,
+    });
+  }
+
+  void _invalidateCourseCache(String courseId) {
+    _courseEvaluationsCache.remove(courseId);
+  }
+
+  void _invalidateEvaluationCache(String evaluationId) {
+    _evaluationResultsCache.remove(evaluationId);
+  }
+
   // ── Professor methods ──────────────────────────────────────────────────────
 
   Future<void> loadCourseEvaluations(String courseId) async {
     try {
+      await _ensureCacheLoaded();
+
+      final cached = _courseEvaluationsCache[courseId];
+      if (cached != null) {
+        courseEvaluations.assignAll(cached);
+        return;
+      }
+
       final evals = await _evalRepo.getEvaluationsForCourse(courseId);
       courseEvaluations.assignAll(evals);
+      _courseEvaluationsCache[courseId] = List<Map<String, dynamic>>.from(evals);
+      await _persistCache();
     } catch (e) {
       Get.snackbar('Error', 'No se pudieron cargar las evaluaciones: $e',
           snackPosition: SnackPosition.BOTTOM);
@@ -60,6 +126,8 @@ class EvaluationController extends GetxController {
         criteria: criteria,
         professorEmail: professorEmail,
       );
+      _invalidateCourseCache(courseId);
+      await _persistCache();
       await loadCourseEvaluations(courseId);
       Get.snackbar(
         'Evaluación creada',
@@ -110,6 +178,8 @@ class EvaluationController extends GetxController {
           failed++;
         }
       }
+      _invalidateCourseCache(courseId);
+      await _persistCache();
       await loadCourseEvaluations(courseId);
     } finally {
       isCreating.value = false;
@@ -120,8 +190,18 @@ class EvaluationController extends GetxController {
   Future<void> loadEvaluationResults(String evaluationId) async {
     isLoadingResults.value = true;
     try {
+      await _ensureCacheLoaded();
+
+      final cached = _evaluationResultsCache[evaluationId];
+      if (cached != null) {
+        evaluationResults.value = cached;
+        return;
+      }
+
       final results = await _evalRepo.getEvaluationResults(evaluationId);
       evaluationResults.value = results;
+      _evaluationResultsCache[evaluationId] = Map<String, dynamic>.from(results);
+      await _persistCache();
     } catch (e) {
       Get.snackbar('Error', 'No se pudieron cargar los resultados: $e',
           snackPosition: SnackPosition.BOTTOM);
@@ -183,6 +263,8 @@ class EvaluationController extends GetxController {
         evaluateeEmail: evaluateeEmail,
         scores: scores,
       );
+      _invalidateEvaluationCache(evaluationId);
+      await _persistCache();
       await loadTeammatesForEvaluation(
         evaluationId: evaluationId,
         evaluatorEmail: evaluatorEmail,
